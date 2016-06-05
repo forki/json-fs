@@ -1,0 +1,10 @@
+init:
+  - git config --global core.autocrlf input
+assembly_info:
+  patch: false
+build_script:
+  - cmd: .\build.cmd
+test: off
+artifacts:
+  - path: bin\*.nupkg
+
