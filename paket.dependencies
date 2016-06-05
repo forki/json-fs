@@ -1,0 +1,14 @@
+source https://nuget.org/api/v2
+
+nuget FParsec
+
+group Build
+source https://nuget.org/api/v2
+
+nuget FAKE
+
+group Test
+source https://nuget.org/api/v2
+
+nuget xUnit.Runner.Console
+nuget FsUnit.xUnit

@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "JsonFs", "src\JsonFs\JsonFs.fsproj", "{52EDB503-DA78-4264-9C08-3600CB8BE2E5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Paket", "Paket", "{C11112AF-A9E1-417E-B44E-71D8F9AF4026}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Fake", "Fake", "{BBD51DDA-A638-4184-9881-23B4E81B8160}"
+	ProjectSection(SolutionItems) = preProject
+		build.cmd = build.cmd
+		build.fsx = build.fsx
+		build.sh = build.sh
+	EndProjectSection
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "JsonFsTests", "tests\JsonFsTests\JsonFsTests.fsproj", "{51F3219E-F990-4E04-8A90-98E2D0B7C772}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{52EDB503-DA78-4264-9C08-3600CB8BE2E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52EDB503-DA78-4264-9C08-3600CB8BE2E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52EDB503-DA78-4264-9C08-3600CB8BE2E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52EDB503-DA78-4264-9C08-3600CB8BE2E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51F3219E-F990-4E04-8A90-98E2D0B7C772}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51F3219E-F990-4E04-8A90-98E2D0B7C772}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51F3219E-F990-4E04-8A90-98E2D0B7C772}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51F3219E-F990-4E04-8A90-98E2D0B7C772}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
