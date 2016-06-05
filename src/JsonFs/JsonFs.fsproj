@@ -51,6 +51,7 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Parsing.fs" />
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
