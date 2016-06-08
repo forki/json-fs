@@ -1,6 +1,11 @@
 ﻿namespace JsonFs
 
-module Parsing =
+type Json = 
+    | Bool of bool
+    | Null of unit
+
+[<AutoOpen>]
+module Parsers =
     open FParsec
 
     (* Grammar 
@@ -14,39 +19,18 @@ module Parsing =
 
     [<Literal>]
     let private space = 0x20
-      
     [<Literal>]
     let private horizontalTab = 0x09
-      
     [<Literal>]
     let private lineFeed = 0x0A
-      
     [<Literal>]
     let private carriageReturn = 0x0D
 
-    let private isWhitespace char = 
+    let private whitespace char = 
         char = space || char = horizontalTab || char = lineFeed || char = carriageReturn
 
     let private pwhitespace =
-        skipManySatisfy (int >> isWhitespace)
-
-    let private pbeginArray =
-        pwhitespace .>> skipChar '[' .>> pwhitespace
-
-    let private pbeginObject =
-        pwhitespace .>> skipChar '{' .>> pwhitespace
-
-    let private pendArray =
-        pwhitespace .>> skipChar ']' .>> pwhitespace
-
-    let private pendObject =
-        pwhitespace .>> skipChar '}' .>> pwhitespace
-
-    let private pnameSeperator =
-        pwhitespace .>> skipChar ':' .>> pwhitespace
-
-    let private valueSeperator =
-        pwhitespace .>> skipChar ',' .>> pwhitespace
+        skipManySatisfy (int >> whitespace)
 
     (* Values
        
@@ -62,3 +46,23 @@ module Parsing =
 
     let private pnull =
         stringReturn "null" () .>> pwhitespace
+
+    (* As defined in the FParsec documentation, any recursive parsing needs
+       to be forward declared. This will allow parsing of nested JSON elements *)
+    
+    let internal pjson, pjsonRef = createParserForwardedToRef()
+
+    do pjsonRef := choice [ 
+                pboolean |>> Bool
+                pnull    |>> Null
+            ]
+    
+    [<RequireQualifiedAccess>]
+    module Json =
+
+        (* Utility functions for parsing JSON in its textual form *)
+
+        let parse text =
+            match run pjson text with
+            | Success (json, _, _) ->  json
+            | Failure (error, _, _) -> failwith error
