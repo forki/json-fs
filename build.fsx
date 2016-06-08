@@ -59,7 +59,7 @@ Target "RunUnitTests" (fun _ ->
             TestRunnerExePath = "./packages/build/xunit.runner.console/tools/xunit.console.exe"
             Output = codeCoverageReport
             Register = RegisterType.RegisterUser
-            Filter = "+[JsonFs*]* -[*.Tests*]*"
+            Filter = "+[JsonFs*]* -[*Tests]*"
         })
         (assembliesToTest + " -appveyor -noshadow")
 )
