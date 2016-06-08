@@ -76,7 +76,7 @@
   -->
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="ParsingTests.fs" />
+    <Compile Include="LiteralValueTests.fs" />
     <Content Include="App.config" />
     <None Include="paket.references" />
   </ItemGroup>
