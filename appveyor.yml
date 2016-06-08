@@ -1,5 +1,8 @@
 init:
   - git config --global core.autocrlf input
+environment:
+  CODECOV_TOKEN:
+    secure: CsYa7MTujGNBt/YiDych8D61r5vneMCuA5q7umBEaeoRR+ld43XEcNQOBqAi2U9t
 assembly_info:
   patch: false
 build_script:

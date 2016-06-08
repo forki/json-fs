@@ -1,0 +1,9 @@
+coverage:
+  notify:
+    slack:
+      default:
+        url: secret:z2+PLfSYAvY55XD8Yqg3CpMTPFzkBzBft1BTfeFaKXQQSSASJRguRYtgxvsTG8vcwcIXjQw8pi6pBt0WwEEK249x4HdLNLWWnOSl4nx3Vx+MgOzYBdf9bazHRU9YtMUVDYkowQOGfgZWmAeMjqhxq8nMBF9LRwF58sVMyAu/6VA=
+        threshold: 1
+        branches:
+          - master
+        attachments: "sunburst, diff"

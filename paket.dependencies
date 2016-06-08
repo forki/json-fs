@@ -6,9 +6,10 @@ group Build
 source https://nuget.org/api/v2
 
 nuget FAKE
+nuget OpenCover
+nuget xUnit.Runner.Console
 
 group Test
 source https://nuget.org/api/v2
 
-nuget xUnit.Runner.Console
 nuget FsUnit.xUnit
