@@ -22,3 +22,15 @@ let ``the string "123456789" is parsed into a decimal value of 123456789``() =
     let result = Json.parse "123456789"
 
     result |> should equal (Json.Number 123456789M)
+
+[<Fact>]
+let ``the string "-1" is parsed into a decimal value of -1``() =
+    let result = Json.parse "-1"
+
+    result |> should equal (Json.Number -1M)
+
+[<Fact>]
+let ``the string "-0" is parsed into a decimal value of 0``() =
+    let result = Json.parse "-0"
+
+    result |> should equal (Json.Number 0M)
