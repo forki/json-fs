@@ -34,3 +34,9 @@ let ``the string "-0" is parsed into a decimal value of 0``() =
     let result = Json.parse "-0"
 
     result |> should equal (Json.Number 0M)
+
+[<Fact>]
+let ``the string "3.14159" is parsed into a decimal value of 3.14159``() =
+    let result = Json.parse "3.14159"
+
+    result |> should equal (Json.Number 3.14159M)

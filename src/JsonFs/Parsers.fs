@@ -73,13 +73,17 @@ module Parsers =
     let private pzero =
         charReturn '0' "0"
 
-    (* An int is only valid if:
-         a. it has the value 0
-         b. or, it starts with a digit between 1 and 9 and then is followed by n digits
-         c. an optional minus sign can be used as a prefix *)
-
     let pminus =
         charReturn '-' "-"
+
+    let pdecimal =
+        charReturn '.' "."
+
+    (* An int is only valid if:
+         a. it has an optional minus sign as its prefix
+         b. it is then followed by 0
+         c. or, it starts with a digit between 1 and 9 and then is followed by n digits
+         d. it is then followed by a decimal point and a fraction *)
 
     let private pint =
         pzero <|> (satisfy (int >> digit1to9) .>>. manySatisfy (int >> digit) 
@@ -90,8 +94,13 @@ module Parsers =
             | Some option -> option
             | _ -> ""
 
+    let private pfraction =
+        pdecimal .>>. manySatisfy (int >> digit) 
+            |>> fun (decimal, i) -> decimal + i
+
     let private pnumber =
-        pipe2 (opt(pminus)) pint (fun sign i -> decimal((|??) sign + i))
+        pipe3 (opt pminus) pint (opt pfraction) 
+            (fun sign i fraction -> decimal((|??) sign + i + (|??) fraction))
 
     (* As defined in the FParsec documentation, any recursive parsing needs
        to be forward declared. This will allow parsing of nested JSON elements *)
