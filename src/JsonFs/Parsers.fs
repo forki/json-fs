@@ -4,6 +4,7 @@ type Json =
     | Bool of bool
     | Null of unit
     | Number of decimal
+    | String of string
 
 [<AutoOpen>]
 module Parsers =
