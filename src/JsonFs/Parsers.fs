@@ -11,12 +11,8 @@ module Parsers =
     open FParsec
 
     (* Grammar 
-       
-       Common grammatical elements that define the structure within JSON text,
-       as defined by the RFC 7159 standard.
 
-       For further detailed information, please read:
-           RFC 7159, Section 2; JSON Grammar
+       For detailed information, please read RFC 7159, section 2
            See [https://tools.ietf.org/html/rfc7159#section-2] *)
 
     [<Literal>]
@@ -34,13 +30,9 @@ module Parsers =
     let private pwhitespace =
         skipManySatisfy (int >> whitespace)
 
-    (* Values
-       
-       Three literal values that are supported within JSON text, as defined by
-       the RFC 7159 standard.
+    (* Values 
 
-       For further detailed information, please read:
-           RFC 7159, Section 3; Values
+       For detailed information, please read RFC 7159, section 3
            See [https://tools.ietf.org/html/rfc7159#section-3] *)
 
     let private pboolean =
@@ -50,12 +42,8 @@ module Parsers =
         stringReturn "null" () .>> pwhitespace
 
     (* Numbers 
-    
-       Numerical representations of numbers that are supported within JSON text,
-       as defined by the RFC 7159 standard.
-       
-       For further detailed information, please read:
-           RFC 7159, Section 6; Number
+
+       For detailed information, please read RFC 7159, section 6
            See [https://tools.ietf.org/html/rfc7159#section-6] *)
 
     [<Literal>]
@@ -112,15 +100,97 @@ module Parsers =
         pipe4 (opt pminus) pint (opt pfraction) (opt pexponent)
             (fun sign i fraction exp -> decimal((|??) sign + i + (|??) fraction + (|??) exp))
 
+    (* Strings 
+
+       For detailed information, please read RFC 7159, section 7
+           See [https://tools.ietf.org/html/rfc7159#section-7] *)
+
+    [<RequireQualifiedAccess>]
+    module private Escaping =
+        open System
+        open System.Globalization
+
+        // The hexadecimal values are entries within the ASCII and UNICODE lookup tables
+        [<Literal>]
+        let private asciiSpace = 0x20
+        [<Literal>]
+        let private asciiExclamationMark = 0x21
+        [<Literal>]
+        let private asciiHash = 0x23
+        [<Literal>]
+        let private asciiLeftSquareBracket = 0x5b
+        [<Literal>]
+        let private asciiRightSquareBracket = 0x5d
+        [<Literal>]
+        let private unicodeSpecialBlockEnd = 0x10ffff
+
+        let private unescaped c =
+            c = asciiSpace || 
+            c = asciiExclamationMark ||
+            c >= asciiHash && c <= asciiLeftSquareBracket ||
+            c >= asciiRightSquareBracket && c <= unicodeSpecialBlockEnd
+
+        let private punescaped =
+            satisfy (int >> unescaped)
+
+        (* An escaped character can be represented by either uppercase or lowercase hexadecimal values *)
+
+        [<Literal>]
+        let private uppercaseA = 0x41
+        [<Literal>]
+        let private uppercaseF = 0x46
+        [<Literal>]
+        let private lowercaseA = 0x61
+        [<Literal>]
+        let private lowercaseF = 0x66
+
+        let private hexdig i =
+            (digit i)
+            || (i >= uppercaseA && i <= uppercaseF)
+            || (i >= lowercaseA && i <= lowercaseF) 
+
+        let private p4hexdig =
+            manyMinMaxSatisfy 4 4 (int >> hexdig)
+                |>> fun str -> char (Int32.Parse(str, NumberStyles.HexNumber))
+
+        let private pescaped =
+            skipChar '\\' >>.
+                choice [
+                    skipChar '"'  >>% '\u0022'
+                    skipChar '\\' >>% '\u005c'
+                    skipChar '/'  >>% '\u002f'
+                    skipChar 'b'  >>% '\u0008'
+                    skipChar 'f'  >>% '\u000c'
+                    skipChar 'n'  >>% '\u000a'
+                    skipChar 'r'  >>% '\u000d'
+                    skipChar 't'  >>% '\u0009'
+                    skipChar 'u'  >>. p4hexdig ]
+
+        let pchar =
+            choice [ 
+                punescaped 
+                pescaped ]
+
+        let parse =
+            many pchar
+ 
+    let private pquotationMark =
+        skipChar '"'
+
+    let private pescapedString =
+        between pquotationMark pquotationMark Escaping.parse 
+            |>> fun chars -> new string (List.toArray chars)
+
     (* As defined in the FParsec documentation, any recursive parsing needs
        to be forward declared. This will allow parsing of nested JSON elements *)
     
     let internal pjson, pjsonRef = createParserForwardedToRef()
 
     do pjsonRef := choice [ 
-                pboolean |>> Json.Bool
-                pnull    |>> Json.Null
-                pnumber  |>> Json.Number
+                pboolean        |>> Json.Bool
+                pnull           |>> Json.Null
+                pnumber         |>> Json.Number
+                pescapedString  |>> Json.String
             ]
     
     [<RequireQualifiedAccess>]
