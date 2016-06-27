@@ -57,3 +57,27 @@ let ``a string containing unicode sequence '\u0aE0' (with mixed case) is parsed 
     let result = Json.parse "\"\\u0aE0\""
 
     result |> should equal (Json.String "ૠ")
+
+[<Fact>]
+let ``a string containing a single space is parsed without escaping``()=
+    let result = Json.parse "\" \""
+
+    result |> should equal (Json.String " ")
+
+[<Fact>]
+let ``a string containing a single exclamation mark is parsed without escaping``()=
+    let result = Json.parse "\"!\""
+
+    result |> should equal (Json.String "!")
+
+[<Fact>]
+let ``a string containing a range of ASCII characters between # and [ is parsed without escaping``()=
+    let result = Json.parse "\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\""
+
+    result |> should equal (Json.String "#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[")
+
+[<Fact>]
+let ``a string containing a range of ASCII characters between ] and ~ is parsed without escaping``()=
+    let result = Json.parse "\"]^_`abcdefghijklmnopqrstuvwxyz{|}~\""
+
+    result |> should equal (Json.String "]^_`abcdefghijklmnopqrstuvwxyz{|}~")
