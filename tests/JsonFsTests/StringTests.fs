@@ -51,3 +51,9 @@ let ``a string containing a '\t' (tab) is escaped as unicode \u0009``() =
     let result = Json.parse "\"\\t\""
 
     result |> should equal (Json.String "\u0009")
+
+[<Fact>]
+let ``a string containing unicode sequence '\u0aE0' (with mixed case) is parsed as character 'ૠ'``()=
+    let result = Json.parse "\"\\u0aE0\""
+
+    result |> should equal (Json.String "ૠ")
