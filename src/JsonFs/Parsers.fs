@@ -5,6 +5,7 @@ type Json =
     | Null of unit
     | Number of decimal
     | String of string
+    | Array of Json list
 
 [<AutoOpen>]
 module Parsers =
@@ -186,11 +187,31 @@ module Parsers =
     
     let internal pjson, pjsonRef = createParserForwardedToRef()
 
+    (* Arrays 
+
+       For detailed information, please read RFC 7159, section 5
+           See [https://tools.ietf.org/html/rfc7159#section-5] *)
+
+    let private pbeginArray =
+        skipChar '[' .>> pwhitespace
+
+    let private pendArray =
+        skipChar ']' .>> pwhitespace
+
+    let private pvalueSeperator =
+        skipChar ',' .>> pwhitespace
+
+    let private parray =
+        between pbeginArray pendArray (sepBy pjson pvalueSeperator)
+
+    (* Wire the parser to the JSON AST *)
+
     do pjsonRef := choice [ 
                 pboolean        |>> Json.Bool
                 pnull           |>> Json.Null
                 pnumber         |>> Json.Number
                 pescapedString  |>> Json.String
+                parray          |>> Json.Array
             ]
     
     [<RequireQualifiedAccess>]
