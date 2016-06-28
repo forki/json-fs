@@ -71,13 +71,14 @@ let ``a string containing a single exclamation mark is parsed without escaping``
     result |> should equal (Json.String "!")
 
 [<Fact>]
-let ``a string containing a range of ASCII characters between # and [ is parsed without escaping``()=
-    let result = Json.parse "\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\""
+let ``a string containing a full range of supported ASCII characters is parsed without escaping``()=
+    let result = Json.parse "\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\""
 
-    result |> should equal (Json.String "#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[")
+    result |> should equal (Json.String "#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~")
 
 [<Fact>]
-let ``a string containing a range of ASCII characters between ] and ~ is parsed without escaping``()=
-    let result = Json.parse "\"]^_`abcdefghijklmnopqrstuvwxyz{|}~\""
+let ``a string containing characters upto the end of the basic multilingual plane are parsed without escaping``()=
+    let result = Json.parse "\"གྷᡵヶ⢇𐿿\""
 
-    result |> should equal (Json.String "]^_`abcdefghijklmnopqrstuvwxyz{|}~")
+    result |> should equal (Json.String "གྷᡵヶ⢇𐿿")
+
