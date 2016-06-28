@@ -15,6 +15,15 @@ module Parsers =
 
        For detailed information, please read RFC 7159, section 2
            See [https://tools.ietf.org/html/rfc7159#section-2] *)
+    
+    [<Literal>]
+    let private beginArray = '['
+    [<Literal>]
+    let private endArray = ']'
+    [<Literal>]
+    let private nameSeperator = ':'
+    [<Literal>]
+    let private valueSeperator = ','
 
     [<Literal>]
     let private space = 0x20
