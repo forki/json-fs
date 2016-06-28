@@ -78,6 +78,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="LiteralValueTests.fs" />
     <Compile Include="NumberTests.fs" />
+    <Compile Include="StringTests.fs" />
     <Content Include="App.config" />
     <None Include="paket.references" />
   </ItemGroup>
