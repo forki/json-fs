@@ -5,6 +5,7 @@ type Json =
     | Null of unit
     | Number of decimal
     | String of string
+    | Array of Json list
 
 [<AutoOpen>]
 module Parsers =

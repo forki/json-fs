@@ -79,6 +79,7 @@
     <Compile Include="LiteralValueTests.fs" />
     <Compile Include="NumberTests.fs" />
     <Compile Include="StringTests.fs" />
+    <Compile Include="ArrayTests.fs" />
     <Content Include="App.config" />
     <None Include="paket.references" />
   </ItemGroup>
