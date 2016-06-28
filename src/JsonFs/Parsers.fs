@@ -193,13 +193,13 @@ module Parsers =
            See [https://tools.ietf.org/html/rfc7159#section-5] *)
 
     let private pbeginArray =
-        skipChar '['
+        skipChar '[' .>> pwhitespace
 
     let private pendArray =
-        skipChar ']'
+        skipChar ']' .>> pwhitespace
 
     let private pvalueSeperator =
-        skipChar ','
+        skipChar ',' .>> pwhitespace
 
     let private parray =
         between pbeginArray pendArray (sepBy pjson pvalueSeperator)
