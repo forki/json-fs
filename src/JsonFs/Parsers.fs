@@ -15,15 +15,6 @@ module Parsers =
 
        For detailed information, please read RFC 7159, section 2
            See [https://tools.ietf.org/html/rfc7159#section-2] *)
-    
-    [<Literal>]
-    let private beginArray = '['
-    [<Literal>]
-    let private endArray = ']'
-    [<Literal>]
-    let private nameSeperator = ':'
-    [<Literal>]
-    let private valueSeperator = ','
 
     [<Literal>]
     let private space = 0x20
@@ -196,11 +187,31 @@ module Parsers =
     
     let internal pjson, pjsonRef = createParserForwardedToRef()
 
+    (* Arrays 
+
+       For detailed information, please read RFC 7159, section 5
+           See [https://tools.ietf.org/html/rfc7159#section-5] *)
+
+    let private pbeginArray =
+        skipChar '['
+
+    let private pendArray =
+        skipChar ']'
+
+    let private pvalueSeperator =
+        skipChar ','
+
+    let private parray =
+        between pbeginArray pendArray (sepBy pjson pvalueSeperator)
+
+    (* Wire the parser to the JSON AST *)
+
     do pjsonRef := choice [ 
                 pboolean        |>> Json.Bool
                 pnull           |>> Json.Null
                 pnumber         |>> Json.Number
                 pescapedString  |>> Json.String
+                parray          |>> Json.Array
             ]
     
     [<RequireQualifiedAccess>]
