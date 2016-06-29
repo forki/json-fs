@@ -9,6 +9,7 @@ nuget FAKE
 nuget OpenCover
 nuget xUnit.Runner.Console
 nuget secure-file
+nuget Brutal.Dev.StrongNameSigner
 
 group Test
 source https://nuget.org/api/v2
