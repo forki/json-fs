@@ -6,6 +6,7 @@ type Json =
     | Number of decimal
     | String of string
     | Array of Json list
+    | Object of Map<string, Json>
 
 [<AutoOpen>]
 module Parsers =
