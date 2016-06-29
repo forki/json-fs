@@ -12,6 +12,7 @@ open System.IO
 let buildDirectory = "./build/"
 let reportsDirectory = "./reports/"
 let toolsDirectory = "./tools"
+let keysDirectory = "./keys"
 
 // Project files for building and testing
 let sourceSets = !! "src/**/*.fsproj"
@@ -31,10 +32,25 @@ Target "Clean" (fun _ ->
 // ------------------------------------------------------------------------------------------
 // Build source and test projects
 
+Target "DecryptSigningKey" (fun _ ->
+    trace "Decrypt signing key for strong named assemblies..."
+
+    Copy keysDirectory ["./packages/build/secure-file/tools/secure-file.exe"]
+
+    let decryptKeyPath = currentDirectory @@ "keys" @@ "decrypt-key.cmd"
+
+    let exitCode = ExecProcess (fun info -> 
+        info.FileName <- decryptKeyPath
+        info.WorkingDirectory <- keysDirectory) (TimeSpan.FromMinutes 1.0)
+
+    if exitCode <> 0 then
+        failwithf "Failed to decrypt the signing key"
+)
+
 Target "PatchAssemblyInfo" (fun _ ->
     trace "Patching all assemblies..."
 
-    let publicKey = (File.ReadAllText "./keys/RethinkFSharp.pk")
+    let publicKey = (File.ReadAllText "./keys/JsonFs.pk")
 
     let getAssemblyInfoAttributes projectName =
         [ Attribute.Title (projectName)
@@ -118,6 +134,7 @@ Target "PublishCodeCoverage" (fun _ ->
 Target "All" DoNothing
 
 "Clean"
+    ==> "DecryptSigningKey"
     ==> "PatchAssemblyInfo"
     ==> "Build"
     ==> "BuildTests"
