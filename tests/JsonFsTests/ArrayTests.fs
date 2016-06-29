@@ -4,8 +4,6 @@ open Xunit
 open FsUnit.Xunit
 open JsonFs
 
-// 1. test an array that contains an object
-
 [<Fact>]
 let ``a empty array is parsed into an empty array``() =
     let result = Json.parse "[]"
