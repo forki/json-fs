@@ -2,7 +2,9 @@
 
 open Fake
 open Fake.OpenCoverHelper
+open Fake.AssemblyInfoFile
 open System
+open System.IO
 
 // ------------------------------------------------------------------------------------------
 // Build parameters
@@ -28,6 +30,35 @@ Target "Clean" (fun _ ->
 
 // ------------------------------------------------------------------------------------------
 // Build source and test projects
+
+Target "PatchAssemblyInfo" (fun _ ->
+    trace "Patching all assemblies..."
+
+    let publicKey = (File.ReadAllText "./keys/RethinkFSharp.pk")
+
+    let getAssemblyInfoAttributes projectName =
+        [ Attribute.Title (projectName)
+          Attribute.Product "JsonFs"
+          Attribute.Description "A super simple JSON library with all the functional goodness of F#"
+          Attribute.Company "Coda Solutions Ltd"
+          Attribute.Version "0.1.0"
+          Attribute.FileVersion "0.1.0"
+          Attribute.KeyFile "../../keys/JsonFs.snk"
+          Attribute.InternalsVisibleTo (sprintf "JsonFsTests,PublicKey=%s" publicKey) ]
+
+    let getProjectDetails projectPath =
+        let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
+        ( projectPath,
+          projectName,
+          System.IO.Path.GetDirectoryName(projectPath),
+          (getAssemblyInfoAttributes projectName)
+        )
+
+    sourceSets
+    |> Seq.map getProjectDetails
+    |> Seq.iter (fun (projFileName, projectName, folderName, attributes) ->
+        CreateFSharpAssemblyInfo (folderName @@ "AssemblyInfo.fs") attributes)
+)
 
 Target "Build" (fun _ ->
     MSBuildRelease buildDirectory "Rebuild" sourceSets
@@ -87,6 +118,7 @@ Target "PublishCodeCoverage" (fun _ ->
 Target "All" DoNothing
 
 "Clean"
+    ==> "PatchAssemblyInfo"
     ==> "Build"
     ==> "BuildTests"
     ==> "RunUnitTests"
