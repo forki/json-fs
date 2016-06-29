@@ -8,6 +8,7 @@ source https://nuget.org/api/v2
 nuget FAKE
 nuget OpenCover
 nuget xUnit.Runner.Console
+nuget secure-file
 
 group Test
 source https://nuget.org/api/v2
