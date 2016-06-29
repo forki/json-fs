@@ -18,6 +18,15 @@ let ``an array containing a single type is parsed into an array``() =
 
 [<Fact>]
 let ``an array containing multiple types is parsed into an array``() =
-    let result = Json.parse "[true, null, 1, \"hello\"]"
+    let result = Json.parse "[true, null, 1, \"hello\", {\"a\": \"again\"}]"
 
-    result |> should equal (Json.Array [Json.Bool true; Json.Null (); Json.Number 1M; Json.String "hello"])
+    let expected =
+        [("a", Json.String "again")] |> Map.ofList
+
+    result |> should equal 
+        (Json.Array 
+            [Json.Bool true; 
+             Json.Null (); 
+             Json.Number 1M; 
+             Json.String "hello";
+             Json.Object expected])

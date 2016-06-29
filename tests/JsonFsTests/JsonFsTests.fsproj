@@ -82,6 +82,7 @@
     <Compile Include="ArrayTests.fs" />
     <Content Include="App.config" />
     <None Include="paket.references" />
+    <Compile Include="ObjectTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

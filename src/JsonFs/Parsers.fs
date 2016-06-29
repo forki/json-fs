@@ -6,6 +6,7 @@ type Json =
     | Number of decimal
     | String of string
     | Array of Json list
+    | Object of Map<string, Json>
 
 [<AutoOpen>]
 module Parsers =
@@ -204,6 +205,26 @@ module Parsers =
     let private parray =
         between pbeginArray pendArray (sepBy pjson pvalueSeperator)
 
+    (* Objects 
+
+       For detailed information, please read RFC 7159, section 4
+           See [https://tools.ietf.org/html/rfc7159#section-4] *)
+
+    let private pbeginObject =
+        skipChar '{' .>> pwhitespace
+
+    let private pendObject =
+        skipChar '}' .>> pwhitespace
+
+    let private pmemberSeperator =
+        skipChar ':' .>> pwhitespace
+
+    let private pmember =
+        pescapedString .>> pmemberSeperator .>>. pjson
+
+    let private pobject =
+        between pbeginObject pendObject (sepBy pmember pvalueSeperator) |>> Map.ofList
+
     (* Wire the parser to the JSON AST *)
 
     do pjsonRef := choice [ 
@@ -212,6 +233,7 @@ module Parsers =
                 pnumber         |>> Json.Number
                 pescapedString  |>> Json.String
                 parray          |>> Json.Array
+                pobject         |>> Json.Object
             ]
     
     [<RequireQualifiedAccess>]
