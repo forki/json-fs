@@ -110,6 +110,7 @@ Target "RunUnitTests" (fun _ ->
             TestRunnerExePath = "./packages/build/xunit.runner.console/tools/xunit.console.exe"
             Output = codeCoverageReport
             Register = RegisterType.RegisterUser
+            OptionalArguments = "-excludebyfile:*\*AssemblyInfo.fs -hideskipped:File"
             Filter = "+[JsonFs*]* -[*Tests]*"
         })
         (assembliesToTest + " -appveyor -noshadow")
