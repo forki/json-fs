@@ -3,6 +3,8 @@ init:
 environment:
   CODECOV_TOKEN:
     secure: CsYa7MTujGNBt/YiDych8D61r5vneMCuA5q7umBEaeoRR+ld43XEcNQOBqAi2U9t
+  SIGNING_KEY_PASSPHRASE:
+    secure: rTlq+yIYmKB33X7v/s4YXTFQ6y6NOxTQqqFH6x34UK0=
 assembly_info:
   patch: false
 build_script:

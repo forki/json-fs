@@ -2,7 +2,9 @@
 
 open Fake
 open Fake.OpenCoverHelper
+open Fake.AssemblyInfoFile
 open System
+open System.IO
 
 // ------------------------------------------------------------------------------------------
 // Build parameters
@@ -10,6 +12,7 @@ open System
 let buildDirectory = "./build/"
 let reportsDirectory = "./reports/"
 let toolsDirectory = "./tools"
+let keysDirectory = "./keys"
 
 // Project files for building and testing
 let sourceSets = !! "src/**/*.fsproj"
@@ -28,6 +31,54 @@ Target "Clean" (fun _ ->
 
 // ------------------------------------------------------------------------------------------
 // Build source and test projects
+
+Target "DecryptSigningKey" (fun _ ->
+    trace "Decrypt signing key for strong named assemblies..."
+
+    Copy keysDirectory ["./packages/build/secure-file/tools/secure-file.exe"]
+
+    let decryptKeyPath = currentDirectory @@ "keys" @@ "decrypt-key.cmd"
+
+    let exitCode = ExecProcess (fun info -> 
+        info.FileName <- decryptKeyPath
+        info.WorkingDirectory <- keysDirectory) (TimeSpan.FromMinutes 1.0)
+
+    if exitCode <> 0 then
+        failwithf "Failed to decrypt the signing key"
+)
+
+Target "PatchAssemblyInfo" (fun _ ->
+    trace "Patching all assemblies..."
+
+    let publicKey = (File.ReadAllText "./keys/JsonFs.pk")
+    let buildNumber = environVarOrDefault "APPVEYOR_BUILD_NUMBER" "0"
+    let assemblyFileVersion = (sprintf "0.1.0.%s" buildNumber)
+
+    trace (sprintf "With assembly file version: %s" assemblyFileVersion)
+
+    let getAssemblyInfoAttributes projectName =
+        [ Attribute.Title (projectName)
+          Attribute.Product "JsonFs"
+          Attribute.Description "A super simple JSON library with all the functional goodness of F#"
+          Attribute.Company "Coda Solutions Ltd"
+          Attribute.Version "0.1.0"
+          Attribute.FileVersion assemblyFileVersion
+          Attribute.KeyFile "../../keys/JsonFs.snk"
+          Attribute.InternalsVisibleTo (sprintf "JsonFsTests,PublicKey=%s" publicKey) ]
+
+    let getProjectDetails projectPath =
+        let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
+        ( projectPath,
+          projectName,
+          System.IO.Path.GetDirectoryName(projectPath),
+          (getAssemblyInfoAttributes projectName)
+        )
+
+    sourceSets
+    |> Seq.map getProjectDetails
+    |> Seq.iter (fun (projFileName, projectName, folderName, attributes) ->
+        CreateFSharpAssemblyInfo (folderName @@ "AssemblyInfo.fs") attributes)
+)
 
 Target "Build" (fun _ ->
     MSBuildRelease buildDirectory "Rebuild" sourceSets
@@ -87,6 +138,8 @@ Target "PublishCodeCoverage" (fun _ ->
 Target "All" DoNothing
 
 "Clean"
+    ==> "DecryptSigningKey"
+    ==> "PatchAssemblyInfo"
     ==> "Build"
     ==> "BuildTests"
     ==> "RunUnitTests"

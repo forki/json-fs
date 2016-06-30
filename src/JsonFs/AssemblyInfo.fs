@@ -1,42 +1,17 @@
-﻿namespace JsonFs.AssemblyInfo
-
+﻿namespace System
 open System.Reflection
 open System.Runtime.CompilerServices
-open System.Runtime.InteropServices
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[<assembly: AssemblyTitle("JsonFs")>]
-[<assembly: AssemblyDescription("")>]
-[<assembly: AssemblyConfiguration("")>]
-[<assembly: AssemblyCompany("")>]
-[<assembly: AssemblyProduct("JsonFs")>]
-[<assembly: AssemblyCopyright("Copyright ©  2016")>]
-[<assembly: AssemblyTrademark("")>]
-[<assembly: AssemblyCulture("")>]
+[<assembly: AssemblyTitleAttribute("JsonFs")>]
+[<assembly: AssemblyProductAttribute("JsonFs")>]
+[<assembly: AssemblyDescriptionAttribute("A super simple JSON library with all the functional goodness of F#")>]
+[<assembly: AssemblyCompanyAttribute("Coda Solutions Ltd")>]
+[<assembly: AssemblyVersionAttribute("0.1.0")>]
+[<assembly: AssemblyFileVersionAttribute("0.1.0")>]
+[<assembly: AssemblyKeyFileAttribute("../../keys/JsonFs.snk")>]
+[<assembly: InternalsVisibleToAttribute("JsonFsTests,PublicKey=002400000480000094000000060200000024000052534131000400000100010033ce8b1a722fa4cdd19e3503926a1b3c916d4806cbc95ba5c403489948b6fcbb2f223065dc2e29c79a89d1fd7ab2242a66e4f190f4658cd8a89a437c6af13524c3668cc16ac6fe95c5ccd47dee37f23474a88086cf92c313e39cac6162f76ed901b725dde004b361d198d85d4d64ff7f35eea8a25d2ee85b52975af30c9d688a")>]
+do ()
 
-// Setting ComVisible to false makes the types in this assembly not visible 
-// to COM components.  If you need to access a type in this assembly from 
-// COM, set the ComVisible attribute to true on that type.
-[<assembly: ComVisible(false)>]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-[<assembly: Guid("52edb503-da78-4264-9c08-3600cb8be2e5")>]
-
-// Version information for an assembly consists of the following four values:
-// 
-//       Major Version
-//       Minor Version 
-//       Build Number
-//       Revision
-// 
-// You can specify all the values or you can default the Build and Revision Numbers 
-// by using the '*' as shown below:
-// [<assembly: AssemblyVersion("1.0.*")>]
-[<assembly: AssemblyVersion("1.0.0.0")>]
-[<assembly: AssemblyFileVersion("1.0.0.0")>]
-[<assembly: InternalsVisibleToAttribute("JsonFsTests")>]
-
-do
-    ()
+module internal AssemblyVersionInformation =
+    let [<Literal>] Version = "0.1.0"
+    let [<Literal>] InformationalVersion = "0.1.0"

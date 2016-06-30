@@ -7,3 +7,5 @@ obj/
 build/
 reports/
 tools/
+*.snk
+keys/secure-file.exe
