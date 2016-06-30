@@ -51,6 +51,10 @@ Target "PatchAssemblyInfo" (fun _ ->
     trace "Patching all assemblies..."
 
     let publicKey = (File.ReadAllText "./keys/JsonFs.pk")
+    let buildNumber = environVarOrDefault "APPVEYOR_BUILD_NUMBER" "0"
+    let assemblyFileVersion = (sprintf "0.1.0.%s" buildNumber)
+
+    trace (sprintf "With assembly file version: %s" assemblyFileVersion)
 
     let getAssemblyInfoAttributes projectName =
         [ Attribute.Title (projectName)
@@ -58,7 +62,7 @@ Target "PatchAssemblyInfo" (fun _ ->
           Attribute.Description "A super simple JSON library with all the functional goodness of F#"
           Attribute.Company "Coda Solutions Ltd"
           Attribute.Version "0.1.0"
-          Attribute.FileVersion "0.1.0"
+          Attribute.FileVersion assemblyFileVersion
           Attribute.KeyFile "../../keys/JsonFs.snk"
           Attribute.InternalsVisibleTo (sprintf "JsonFsTests,PublicKey=%s" publicKey) ]
 
