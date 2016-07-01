@@ -1,0 +1,26 @@
+﻿type file
+id
+	JsonFs
+owners
+	Coda Solutions Ltd
+authors
+	Paul Thomas
+projectUrl
+	https://github.com/ptcoda/json-fs
+licenseUrl
+	https://github.com/ptcoda/json-fs/blob/master/LICENSE
+requireLicenseAcceptance
+	false
+copyright
+	Copyright 2016
+tags
+	F# fsharp json parser parsing serialization
+summary
+	JsonFs is a JSON serialization framework that has been designed with F# in mind.
+description
+	A super simple JSON library with all the functional goodness of F#
+dependencies
+	FSharp.Core >= 3.1.2.5
+	FParsec >= 1.0.2
+files
+	../../build/JsonFs.dll ==> lib/net45

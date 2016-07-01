@@ -3,6 +3,8 @@
 open Fake
 open Fake.OpenCoverHelper
 open Fake.AssemblyInfoFile
+open Fake.Git
+open Fake.ReleaseNotesHelper
 open System
 open System.IO
 
@@ -13,20 +15,29 @@ let buildDirectory = "./build/"
 let reportsDirectory = "./reports/"
 let toolsDirectory = "./tools"
 let keysDirectory = "./keys"
+let binDirectory = "./bin"
 
 // Project files for building and testing
 let sourceSets = !! "src/**/*.fsproj"
 let testSets = !! "tests/**/*.fsproj"
 
-// Not long till Windows 10 supports Bash natively :)
+// Releases will be automatic from the master branch
+let isRelease = getBranchName __SOURCE_DIRECTORY__ = "master"
 
+// Due to PRs not supporting secure variables in AppVeyor, some steps need to be skipped
+let isPullRequest = environVar "APPVEYOR_PULL_REQUEST_NUMBER" <> null
+
+// Extract information from the pending release
+let releaseNotes = parseReleaseNotes (File.ReadAllLines "RELEASE_NOTES.md")
+
+// Not long till Windows 10 supports Bash natively :)
 setEnvironVar "PATH" "C:\\cygwin64;C:\\cygwin64\\bin;C:\\cygwin;C:\\cygwin\\bin;%PATH%"
 
 // ------------------------------------------------------------------------------------------
 // Clean targets
 
 Target "Clean" (fun _ -> 
-    CleanDirs[buildDirectory; reportsDirectory; toolsDirectory]
+    CleanDirs[buildDirectory; reportsDirectory; toolsDirectory; binDirectory]
 )
 
 // ------------------------------------------------------------------------------------------
@@ -50,21 +61,32 @@ Target "DecryptSigningKey" (fun _ ->
 Target "PatchAssemblyInfo" (fun _ ->
     trace "Patching all assemblies..."
 
-    let publicKey = (File.ReadAllText "./keys/JsonFs.pk")
-    let buildNumber = environVarOrDefault "APPVEYOR_BUILD_NUMBER" "0"
-    let assemblyFileVersion = (sprintf "0.1.0.%s" buildNumber)
-
-    trace (sprintf "With assembly file version: %s" assemblyFileVersion)
-
     let getAssemblyInfoAttributes projectName =
-        [ Attribute.Title (projectName)
+        let assemblyFileVersion = 
+            let buildNumber = environVarOrDefault "APPVEYOR_BUILD_NUMBER" "0"
+            sprintf "%s.%s" releaseNotes.AssemblyVersion buildNumber
+
+        let signedInternalsVisibleTo = 
+            let publicKey = (File.ReadAllText "./keys/JsonFs.pk")
+            sprintf "JsonFsTests,PublicKey=%s" publicKey
+
+        let attributes = [ 
+          Attribute.Title (projectName)
           Attribute.Product "JsonFs"
           Attribute.Description "A super simple JSON library with all the functional goodness of F#"
           Attribute.Company "Coda Solutions Ltd"
           Attribute.Version "0.1.0"
-          Attribute.FileVersion assemblyFileVersion
-          Attribute.KeyFile "../../keys/JsonFs.snk"
-          Attribute.InternalsVisibleTo (sprintf "JsonFsTests,PublicKey=%s" publicKey) ]
+          Attribute.FileVersion assemblyFileVersion ]
+
+        if isPullRequest then
+            List.concat [
+                attributes; 
+                [ Attribute.InternalsVisibleTo "JsonFsTests" ]]
+        else
+            List.concat [
+                attributes; 
+                [ Attribute.KeyFile "../../keys/JsonFs.snk"; 
+                  Attribute.InternalsVisibleTo signedInternalsVisibleTo ]]
 
     let getProjectDetails projectPath =
         let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
@@ -136,15 +158,44 @@ Target "PublishCodeCoverage" (fun _ ->
         failwithf "Failed to upload the codecov coverage report"
 )
 
+// ------------------------------------------------------------------------------------------
+// Generate Nuget package and deploy
+
+Target "NugetPackage" (fun _ ->
+    trace "Building Nuget package with Paket..."
+
+    Paket.Pack (fun p -> 
+        { p with
+            OutputPath = binDirectory
+            Symbols = true
+            Version = releaseNotes.NugetVersion
+            ReleaseNotes = releaseNotes.Notes |> String.concat Environment.NewLine
+        })
+)
+
+Target "PublishNugetPackage" (fun _ ->
+    trace "Publishing Nuget package with Paket..."
+
+    let nugetApiToken = environVarOrFail "NUGET_TOKEN"
+
+    Paket.Push (fun p ->
+        { p with
+            ApiKey = nugetApiToken
+            WorkingDir = binDirectory
+        })
+)
+
 Target "All" DoNothing
 
 "Clean"
-    ==> "DecryptSigningKey"
+    =?> ("DecryptSigningKey", not isPullRequest)
     ==> "PatchAssemblyInfo"
     ==> "Build"
     ==> "BuildTests"
     ==> "RunUnitTests"
     ==> "PublishCodeCoverage"
+    =?> ("NugetPackage", isRelease)
+    =?> ("PublishNugerPackage", isRelease)
     ==> "All"
 
 RunTargetOrDefault "All"
