@@ -24,6 +24,10 @@ let testSets = !! "tests/**/*.fsproj"
 // Releases will be automatic from the master branch
 let isRelease = getBranchName __SOURCE_DIRECTORY__ = "master"
 
+trace (sprintf "source directory: %s" __SOURCE_DIRECTORY__)
+trace (sprintf "branch: %s" (getBranchName __SOURCE_DIRECTORY__))
+trace (sprintf "is release branch: %b" isRelease)
+
 // Due to PRs not supporting secure variables in AppVeyor, some steps need to be skipped
 let isPullRequest = environVar "APPVEYOR_PULL_REQUEST_NUMBER" <> null
 
@@ -195,7 +199,7 @@ Target "All" DoNothing
     ==> "RunUnitTests"
     ==> "PublishCodeCoverage"
     =?> ("NugetPackage", isRelease)
-    =?> ("PublishNugerPackage", isRelease)
+    =?> ("PublishNugetPackage", isRelease)
     ==> "All"
 
 RunTargetOrDefault "All"
