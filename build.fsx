@@ -3,6 +3,8 @@
 open Fake
 open Fake.OpenCoverHelper
 open Fake.AssemblyInfoFile
+open Fake.Git
+open Fake.ReleaseNotesHelper
 open System
 open System.IO
 
@@ -13,10 +15,17 @@ let buildDirectory = "./build/"
 let reportsDirectory = "./reports/"
 let toolsDirectory = "./tools"
 let keysDirectory = "./keys"
+let binDirectory = "./bin"
 
 // Project files for building and testing
 let sourceSets = !! "src/**/*.fsproj"
 let testSets = !! "tests/**/*.fsproj"
+
+// Releases will be automatic from the master branch
+let isRelease = getBranchName __SOURCE_DIRECTORY__ = "master"
+
+// Extract information from the pending release
+let releaseNotes = parseReleaseNotes (File.ReadAllLines "RELEASE_NOTES.md")
 
 // Not long till Windows 10 supports Bash natively :)
 
@@ -26,7 +35,7 @@ setEnvironVar "PATH" "C:\\cygwin64;C:\\cygwin64\\bin;C:\\cygwin;C:\\cygwin\\bin;
 // Clean targets
 
 Target "Clean" (fun _ -> 
-    CleanDirs[buildDirectory; reportsDirectory; toolsDirectory]
+    CleanDirs[buildDirectory; reportsDirectory; toolsDirectory; binDirectory]
 )
 
 // ------------------------------------------------------------------------------------------
@@ -52,7 +61,7 @@ Target "PatchAssemblyInfo" (fun _ ->
 
     let publicKey = (File.ReadAllText "./keys/JsonFs.pk")
     let buildNumber = environVarOrDefault "APPVEYOR_BUILD_NUMBER" "0"
-    let assemblyFileVersion = (sprintf "0.1.0.%s" buildNumber)
+    let assemblyFileVersion = (sprintf "%s.%s" releaseNotes.AssemblyVersion buildNumber)
 
     trace (sprintf "With assembly file version: %s" assemblyFileVersion)
 
@@ -136,6 +145,25 @@ Target "PublishCodeCoverage" (fun _ ->
         failwithf "Failed to upload the codecov coverage report"
 )
 
+// ------------------------------------------------------------------------------------------
+// Generate Nuget package and deploy
+
+Target "NugetPackage" (fun _ ->
+    trace "Building Nuget package with Paket..."
+
+    Paket.Pack (fun p -> 
+        { p with
+            OutputPath = binDirectory
+            Symbols = true
+            Version = releaseNotes.NugetVersion
+            ReleaseNotes = releaseNotes.Notes |> String.concat Environment.NewLine
+        })
+)
+
+Target "PublishNugetPackage" (fun _ ->
+    ()
+)
+
 Target "All" DoNothing
 
 "Clean"
@@ -145,6 +173,7 @@ Target "All" DoNothing
     ==> "BuildTests"
     ==> "RunUnitTests"
     ==> "PublishCodeCoverage"
+    =?> ("NugetPackage", isRelease)
     ==> "All"
 
 RunTargetOrDefault "All"
