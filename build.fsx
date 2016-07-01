@@ -24,11 +24,13 @@ let testSets = !! "tests/**/*.fsproj"
 // Releases will be automatic from the master branch
 let isRelease = getBranchName __SOURCE_DIRECTORY__ = "master"
 
+// Due to PRs not supporting secure variables in AppVeyor, some steps need to be skipped
+let isPullRequest = environVar "APPVEYOR_PULL_REQUEST_NUMBER" <> null
+
 // Extract information from the pending release
 let releaseNotes = parseReleaseNotes (File.ReadAllLines "RELEASE_NOTES.md")
 
 // Not long till Windows 10 supports Bash natively :)
-
 setEnvironVar "PATH" "C:\\cygwin64;C:\\cygwin64\\bin;C:\\cygwin;C:\\cygwin\\bin;%PATH%"
 
 // ------------------------------------------------------------------------------------------
@@ -59,21 +61,32 @@ Target "DecryptSigningKey" (fun _ ->
 Target "PatchAssemblyInfo" (fun _ ->
     trace "Patching all assemblies..."
 
-    let publicKey = (File.ReadAllText "./keys/JsonFs.pk")
-    let buildNumber = environVarOrDefault "APPVEYOR_BUILD_NUMBER" "0"
-    let assemblyFileVersion = (sprintf "%s.%s" releaseNotes.AssemblyVersion buildNumber)
-
-    trace (sprintf "With assembly file version: %s" assemblyFileVersion)
-
     let getAssemblyInfoAttributes projectName =
-        [ Attribute.Title (projectName)
+        let assemblyFileVersion = 
+            let buildNumber = environVarOrDefault "APPVEYOR_BUILD_NUMBER" "0"
+            sprintf "%s.%s" releaseNotes.AssemblyVersion buildNumber
+
+        let signedInternalsVisibleTo = 
+            let publicKey = (File.ReadAllText "./keys/JsonFs.pk")
+            sprintf "JsonFsTests,PublicKey=%s" publicKey
+
+        let attributes = [ 
+          Attribute.Title (projectName)
           Attribute.Product "JsonFs"
           Attribute.Description "A super simple JSON library with all the functional goodness of F#"
           Attribute.Company "Coda Solutions Ltd"
           Attribute.Version "0.1.0"
-          Attribute.FileVersion assemblyFileVersion
-          Attribute.KeyFile "../../keys/JsonFs.snk"
-          Attribute.InternalsVisibleTo (sprintf "JsonFsTests,PublicKey=%s" publicKey) ]
+          Attribute.FileVersion assemblyFileVersion ]
+
+        if isPullRequest then
+            List.concat [
+                attributes; 
+                [ Attribute.InternalsVisibleTo "JsonFsTests" ]]
+        else
+            List.concat [
+                attributes; 
+                [ Attribute.KeyFile "../../keys/JsonFs.snk"; 
+                  Attribute.InternalsVisibleTo signedInternalsVisibleTo ]]
 
     let getProjectDetails projectPath =
         let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
@@ -175,7 +188,7 @@ Target "PublishNugetPackage" (fun _ ->
 Target "All" DoNothing
 
 "Clean"
-    ==> "DecryptSigningKey"
+    =?> ("DecryptSigningKey", not isPullRequest)
     ==> "PatchAssemblyInfo"
     ==> "Build"
     ==> "BuildTests"
