@@ -161,7 +161,15 @@ Target "NugetPackage" (fun _ ->
 )
 
 Target "PublishNugetPackage" (fun _ ->
-    ()
+    trace "Publishing Nuget package with Paket..."
+
+    let nugetApiToken = environVarOrFail "NUGET_TOKEN"
+
+    Paket.Push (fun p ->
+        { p with
+            ApiKey = nugetApiToken
+            WorkingDir = binDirectory
+        })
 )
 
 Target "All" DoNothing
@@ -174,6 +182,7 @@ Target "All" DoNothing
     ==> "RunUnitTests"
     ==> "PublishCodeCoverage"
     =?> ("NugetPackage", isRelease)
+    =?> ("PublishNugerPackage", isRelease)
     ==> "All"
 
 RunTargetOrDefault "All"
