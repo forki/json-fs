@@ -21,11 +21,18 @@ let binDirectory = "./bin"
 let sourceSets = !! "src/**/*.fsproj"
 let testSets = !! "tests/**/*.fsproj"
 
-// Releases will be automatic from the master branch
-let isRelease = getBranchName __SOURCE_DIRECTORY__ = "master"
-
 // Due to PRs not supporting secure variables in AppVeyor, some steps need to be skipped
 let isPullRequest = environVar "APPVEYOR_PULL_REQUEST_NUMBER" <> null
+
+// Releases will be automatic from the master branch
+let isRelease =
+    let appveyorBuild = environVar "APPVEYOR" <> null
+
+    if appveyorBuild then
+        // Base branch will be master if pull request is being merged into it
+        environVar "APPVEYOR_REPO_BRANCH" = "master" && not isPullRequest
+    else
+        getBranchName __SOURCE_DIRECTORY__ = "master"
 
 // Extract information from the pending release
 let releaseNotes = parseReleaseNotes (File.ReadAllLines "RELEASE_NOTES.md")
@@ -195,7 +202,7 @@ Target "All" DoNothing
     ==> "RunUnitTests"
     ==> "PublishCodeCoverage"
     =?> ("NugetPackage", isRelease)
-    =?> ("PublishNugerPackage", isRelease)
+    =?> ("PublishNugetPackage", isRelease)
     ==> "All"
 
 RunTargetOrDefault "All"
