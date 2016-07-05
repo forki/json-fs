@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Fake", "Fake", "{BBD51DDA-A
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "JsonFsTests", "tests\JsonFsTests\JsonFsTests.fsproj", "{51F3219E-F990-4E04-8A90-98E2D0B7C772}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "JsonFsPerformance", "tests\JsonFsPerformance\JsonFsPerformance.fsproj", "{33994A52-01E7-4794-B470-C48F59D9BF5E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{51F3219E-F990-4E04-8A90-98E2D0B7C772}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51F3219E-F990-4E04-8A90-98E2D0B7C772}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51F3219E-F990-4E04-8A90-98E2D0B7C772}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33994A52-01E7-4794-B470-C48F59D9BF5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33994A52-01E7-4794-B470-C48F59D9BF5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33994A52-01E7-4794-B470-C48F59D9BF5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33994A52-01E7-4794-B470-C48F59D9BF5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

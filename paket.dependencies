@@ -15,3 +15,8 @@ group Test
 source https://nuget.org/api/v2
 
 nuget FsUnit.xUnit
+
+group PerformanceTest
+source https://nuget.org/api/v2
+
+nuget Newtonsoft.Json

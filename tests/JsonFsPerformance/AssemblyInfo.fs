@@ -1,4 +1,4 @@
-﻿namespace JsonFs.AssemblyInfo
+﻿namespace JsonFsPerformance.AssemblyInfo
 
 open System.Reflection
 open System.Runtime.CompilerServices
@@ -7,9 +7,9 @@ open System.Runtime.InteropServices
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[<assembly: AssemblyTitle("JsonFs")>]
+[<assembly: AssemblyTitle("JsonFsPerformance")>]
 [<assembly: AssemblyCompany("Coda Solutions Ltd")>]
-[<assembly: AssemblyProduct("JsonFs")>]
+[<assembly: AssemblyProduct("JsonFsPerformance")>]
 [<assembly: AssemblyCopyright("Copyright © 2016")>]
 
 // Version information for an assembly consists of the following four values:
