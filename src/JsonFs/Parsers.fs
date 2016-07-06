@@ -100,7 +100,7 @@ module Parsers =
 
     let private pnumber =
         pipe4 (opt pminus) pint (opt pfraction) (opt pexponent)
-            (fun sign i fraction exp -> decimal((|??) sign + i + (|??) fraction + (|??) exp))
+            (fun sign i fraction exp -> decimal((|??) sign + i + (|??) fraction + (|??) exp)) .>> pwhitespace
 
     (* Strings 
 
@@ -180,7 +180,7 @@ module Parsers =
         skipChar '"'
 
     let private pescapedString =
-        between pquotationMark pquotationMark Escaping.parse 
+        between pquotationMark pquotationMark Escaping.parse .>> pwhitespace
             |>> fun chars -> new string (List.toArray chars)
 
     (* As defined in the FParsec documentation, any recursive parsing needs

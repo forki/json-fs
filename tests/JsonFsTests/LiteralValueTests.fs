@@ -25,9 +25,9 @@ let ``the literal "false" is correctly parsed into a boolean``() =
 
 [<Fact>]
 let ``the literal "false" is correctly parsed into a boolean, when trailed by whitespace``() =
-    let result = Json.parse "true  "
+    let result = Json.parse "false  "
 
-    result |> should equal (Json.Bool true)
+    result |> should equal (Json.Bool false)
 
 [<Fact>]
 let ``the literal "true" must in lowercase to be parsed otherwise an exception is thrown``() =

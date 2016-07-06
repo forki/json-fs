@@ -30,3 +30,9 @@ let ``an array containing multiple types is parsed into an array``() =
              Json.Number 1M; 
              Json.String "hello";
              Json.Object expected])
+
+[<Fact>]
+let ``an array containing a single type is parsed into an array when trailed by whitespace``() =
+    let result = Json.parse "[1, 2, 3]    "
+
+    result |> should equal (Json.Array [Json.Number 1M; Json.Number 2M; Json.Number 3M])

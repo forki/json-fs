@@ -82,3 +82,9 @@ let ``a string containing characters upto the end of the basic multilingual plan
 
     result |> should equal (Json.String "གྷᡵヶ⢇𐿿")
 
+[<Fact>]
+let ``a string "abcdefg" is parsed when trailed by whitespace``()=
+    let result = Json.parse "\"abcdefg\"    "
+
+    result |> should equal (Json.String "abcdefg")
+
