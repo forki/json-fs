@@ -233,6 +233,7 @@ module Parsers =
     do pjsonRef := 
         fun (stream: CharStream<_>) ->
             match stream.Peek() with
+            | '[' -> parray stream
             | '"' -> pescapedString stream
             | 't' -> ptrue stream
             | 'f' -> pfalse stream
