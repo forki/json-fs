@@ -37,11 +37,14 @@ module Parsers =
        For detailed information, please read RFC 7159, section 3
            See [https://tools.ietf.org/html/rfc7159#section-3] *)
 
-    let private pboolean =
-        stringReturn "true" true <|> stringReturn "false" false .>> pwhitespace
+    let private ptrue =
+        stringReturn "true" true .>> pwhitespace |>> Bool
+
+    let private pfalse =
+        stringReturn "false" false .>> pwhitespace |>> Bool
 
     let private pnull =
-        stringReturn "null" () .>> pwhitespace
+        stringReturn "null" () .>> pwhitespace |>> Null
 
     (* Numbers 
 
@@ -227,14 +230,13 @@ module Parsers =
 
     (* Wire the parser to the JSON AST *)
 
-    do pjsonRef := choice [ 
-                pboolean        |>> Json.Bool
-                pnull           |>> Json.Null
-                pnumber         |>> Json.Number
-                pescapedString  |>> Json.String
-                parray          |>> Json.Array
-                pobject         |>> Json.Object
-            ]
+    do pjsonRef := 
+        fun (stream: CharStream<_>) ->
+            match stream.Peek() with
+            | 't' -> ptrue stream
+            | 'f' -> pfalse stream
+            | 'n' -> pnull stream
+            | _ -> Reply()
     
     [<RequireQualifiedAccess>]
     module Json =
