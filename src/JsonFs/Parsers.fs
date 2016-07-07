@@ -184,7 +184,10 @@ module Parsers =
 
     let private pescapedString =
         between pquotationMark pquotationMark Escaping.parse .>> pwhitespace
-            |>> fun chars -> String(new string (List.toArray chars))
+            |>> fun chars -> new string (List.toArray chars)
+
+    let private pstring =
+        pescapedString |>> String
 
     (* As defined in the FParsec documentation, any recursive parsing needs
        to be forward declared. This will allow parsing of nested JSON elements *)
@@ -226,15 +229,16 @@ module Parsers =
         pescapedString .>> pmemberSeperator .>>. pjson
 
     let private pobject =
-        between pbeginObject pendObject (sepBy pmember pvalueSeperator) |>> Map.ofList
+        between pbeginObject pendObject (sepBy pmember pvalueSeperator) |>> (Map.ofList >> Object)
 
     (* Wire the parser to the JSON AST *)
 
     do pjsonRef := 
         fun (stream: CharStream<_>) ->
             match stream.Peek() with
+            | '{' -> pobject stream
             | '[' -> parray stream
-            | '"' -> pescapedString stream
+            | '"' -> pstring stream
             | 't' -> ptrue stream
             | 'f' -> pfalse stream
             | 'n' -> pnull stream
