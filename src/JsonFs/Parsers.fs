@@ -103,7 +103,7 @@ module Parsers =
 
     let private pnumber =
         pipe4 (opt pminus) pint (opt pfraction) (opt pexponent)
-            (fun sign i fraction exp -> decimal((|??) sign + i + (|??) fraction + (|??) exp)) .>> pwhitespace
+            (fun sign i fraction exp -> decimal((|??) sign + i + (|??) fraction + (|??) exp)) .>> pwhitespace |>> Number
 
     (* Strings 
 
@@ -184,7 +184,7 @@ module Parsers =
 
     let private pescapedString =
         between pquotationMark pquotationMark Escaping.parse .>> pwhitespace
-            |>> fun chars -> new string (List.toArray chars)
+            |>> fun chars -> String(new string (List.toArray chars))
 
     (* As defined in the FParsec documentation, any recursive parsing needs
        to be forward declared. This will allow parsing of nested JSON elements *)
@@ -206,7 +206,7 @@ module Parsers =
         skipChar ',' .>> pwhitespace
 
     let private parray =
-        between pbeginArray pendArray (sepBy pjson pvalueSeperator)
+        between pbeginArray pendArray (sepBy pjson pvalueSeperator) |>> Array
 
     (* Objects 
 
@@ -233,10 +233,11 @@ module Parsers =
     do pjsonRef := 
         fun (stream: CharStream<_>) ->
             match stream.Peek() with
+            | '"' -> pescapedString stream
             | 't' -> ptrue stream
             | 'f' -> pfalse stream
             | 'n' -> pnull stream
-            | _ -> Reply()
+            | _ -> pnumber stream
     
     [<RequireQualifiedAccess>]
     module Json =
