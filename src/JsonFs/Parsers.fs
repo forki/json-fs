@@ -12,25 +12,7 @@ type Json =
 module Parsers =
     open FParsec
 
-    (* Grammar 
-
-       For detailed information, please read RFC 7159, section 2
-           See [https://tools.ietf.org/html/rfc7159#section-2] *)
-
-    [<Literal>]
-    let private space = 0x20
-    [<Literal>]
-    let private horizontalTab = 0x09
-    [<Literal>]
-    let private lineFeed = 0x0A
-    [<Literal>]
-    let private carriageReturn = 0x0D
-
-    let private whitespace char = 
-        char = space || char = horizontalTab || char = lineFeed || char = carriageReturn
-
-    let private pwhitespace =
-        skipManySatisfy (int >> whitespace)
+    let private pwhitespace = spaces
 
     (* Values 
 
