@@ -12,21 +12,7 @@ type Json =
 module Parsers =
     open FParsec
 
-    let private pwhitespace = spaces
-
-    (* Values 
-
-       For detailed information, please read RFC 7159, section 3
-           See [https://tools.ietf.org/html/rfc7159#section-3] *)
-
-    let private ptrue =
-        stringReturn "true" true .>> pwhitespace |>> Bool
-
-    let private pfalse =
-        stringReturn "false" false .>> pwhitespace |>> Bool
-
-    let private pnull =
-        stringReturn "null" () .>> pwhitespace |>> Null
+    let private pspaces = spaces
 
     (* Numbers 
 
@@ -85,7 +71,7 @@ module Parsers =
 
     let private pnumber =
         pipe4 (opt pminus) pint (opt pfraction) (opt pexponent)
-            (fun sign i fraction exp -> decimal((|??) sign + i + (|??) fraction + (|??) exp)) .>> pwhitespace |>> Number
+            (fun sign i fraction exp -> decimal((|??) sign + i + (|??) fraction + (|??) exp)) |>> Number
 
     (* Strings 
 
@@ -165,7 +151,7 @@ module Parsers =
         skipChar '"'
 
     let private pescapedString =
-        between pquotationMark pquotationMark Escaping.parse .>> pwhitespace
+        between pquotationMark pquotationMark Escaping.parse
             |>> fun chars -> new string (List.toArray chars)
 
     let private pstring =
@@ -182,13 +168,13 @@ module Parsers =
            See [https://tools.ietf.org/html/rfc7159#section-5] *)
 
     let private pbeginArray =
-        skipChar '[' .>> pwhitespace
+        skipChar '[' .>> pspaces
 
     let private pendArray =
-        skipChar ']' .>> pwhitespace
+        skipChar ']' .>> pspaces
 
     let private pvalueSeperator =
-        skipChar ',' .>> pwhitespace
+        skipChar ',' .>> pspaces
 
     let private parray =
         between pbeginArray pendArray (sepBy pjson pvalueSeperator) |>> Array
@@ -199,19 +185,20 @@ module Parsers =
            See [https://tools.ietf.org/html/rfc7159#section-4] *)
 
     let private pbeginObject =
-        skipChar '{' .>> pwhitespace
+        skipChar '{'
 
     let private pendObject =
-        skipChar '}' .>> pwhitespace
+        skipChar '}'
 
     let private pmemberSeperator =
-        skipChar ':' .>> pwhitespace
+        pspaces >>. skipChar ':' .>> pspaces
 
     let private pmember =
         pescapedString .>> pmemberSeperator .>>. pjson
 
     let private pobject =
-        between pbeginObject pendObject (sepBy pmember pvalueSeperator) |>> (Map.ofList >> Object)
+        between pbeginObject pendObject (pspaces >>. sepBy (pmember .>> pspaces) (pvalueSeperator .>> pspaces)) 
+            |>> (Map.ofList >> Object)
 
     (* Wire the parser to the JSON AST *)
 
@@ -219,11 +206,11 @@ module Parsers =
         fun (stream: CharStream<_>) ->
             match stream.Peek() with
             | '{' -> pobject stream
-            | '[' -> parray stream
             | '"' -> pstring stream
-            | 't' -> ptrue stream
-            | 'f' -> pfalse stream
-            | 'n' -> pnull stream
+            | '[' -> parray stream
+            | 't' when stream.Skip("true") -> Reply(Bool true)
+            | 'f' when stream.Skip("false") -> Reply(Bool false)
+            | 'n' when stream.Skip("null") -> Reply(Null ())
             | _ -> pnumber stream
     
     [<RequireQualifiedAccess>]
