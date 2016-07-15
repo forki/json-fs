@@ -85,6 +85,7 @@
     <Compile Include="StringTests.fs" />
     <Compile Include="ArrayTests.fs" />
     <Compile Include="ObjectTests.fs" />
+    <Compile Include="CharStreamTests.fs" />
     <Content Include="App.config" />
     <None Include="paket.references" />
   </ItemGroup>
@@ -101,6 +102,11 @@
     <ProjectReference Include="..\..\src\JsonFs\JsonFs.fsproj">
       <Name>JsonFs</Name>
       <Project>{52edb503-da78-4264-9c08-3600cb8be2e5}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\ParserCs\ParserCs.csproj">
+      <Name>ParserCs</Name>
+      <Project>{6dd6b87c-027b-489a-9317-e26979bb05c6}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

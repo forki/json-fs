@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "JsonFs", "src\JsonFs\JsonFs.fsproj", "{52EDB503-DA78-4264-9C08-3600CB8BE2E5}"
 EndProject
@@ -21,6 +21,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "JsonFsTests", "tests\JsonFs
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "JsonFsPerformance", "tests\JsonFsPerformance\JsonFsPerformance.fsproj", "{33994A52-01E7-4794-B470-C48F59D9BF5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParserCs", "src\ParserCs\ParserCs.csproj", "{6DD6B87C-027B-489A-9317-E26979BB05C6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{33994A52-01E7-4794-B470-C48F59D9BF5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33994A52-01E7-4794-B470-C48F59D9BF5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33994A52-01E7-4794-B470-C48F59D9BF5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DD6B87C-027B-489A-9317-E26979BB05C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DD6B87C-027B-489A-9317-E26979BB05C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DD6B87C-027B-489A-9317-E26979BB05C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DD6B87C-027B-489A-9317-E26979BB05C6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
