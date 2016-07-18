@@ -10,14 +10,23 @@ namespace ParserCs
     /// </summary>
     public class CharStream : IDisposable
     {
-        public CharStream(TextReader textReader)
+        /// <summary>
+        /// Constructs a new instance of a <see cref="CharStream"/>.
+        /// </summary>
+        /// <param name="textReader">A reader that can read a sequential series of characters.</param>
+        /// <param name="bufferSize">The size of the internal read buffer. Use to override the default.</param>
+        /// <remarks>
+        /// The default size of the internal read buffer is 1024 characters.
+        /// </remarks>
+        public CharStream(TextReader textReader, int bufferSize = DefaultBufferSize)
         {
             _textReader = textReader;
 
-            _buffer = new char[BufferLength];
+            _bufferSize = bufferSize;
+            _buffer = new char[_bufferSize];
             _buffer[_readPosition] = '\0';
 
-            _textReader.Read(_buffer, 0, BufferLength);
+            _textReader.Read(_buffer, 0, _bufferSize);
         }
 
         public char Peek() => _buffer[_readPosition];
@@ -51,10 +60,21 @@ namespace ParserCs
                     return;
                 }
             }
-            while (_readPosition < BufferLength);
+            while (_readPosition < _bufferSize);
         }
 
-        public char Read() => _buffer[_readPosition++];
+        public char Read()
+        {
+            if (_readPosition != _bufferSize)
+            {
+                return _buffer[_readPosition++];
+            }
+
+            _textReader.Read(_buffer, 0, _bufferSize);
+            _readPosition = 0;
+
+            return _buffer[_readPosition++];
+        }
 
         public char[] Read(uint length)
         {
@@ -91,7 +111,8 @@ namespace ParserCs
 
         private readonly TextReader _textReader;
         private readonly char[] _buffer;
-        private const int BufferLength = 1024;
+        private readonly int _bufferSize;
+        private const int DefaultBufferSize = 1024;
         private int _readPosition;
         private bool _disposed;
     }
