@@ -55,3 +55,17 @@ let ``skips all whitespace until end of character sequence reached``() =
 
     charStream.SkipWhitespace()
     charStream.Peek() |> should equal '\u0000'
+
+[<Fact>]
+let ``reading a single character should advance the stream``() =
+    use charStream = buildCharStream "ab"
+
+    charStream.Read() |> should equal 'a'
+    charStream.Peek() |> should equal 'b'
+
+[<Fact>]
+let ``reading a sequence of characters should advance the stream``() =
+    use charStream = buildCharStream "abcd"
+
+    charStream.Read(3u) |> should equal [|'a'; 'b'; 'c'|]
+    charStream.Peek() |> should equal 'd'

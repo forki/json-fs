@@ -22,19 +22,19 @@ namespace ParserCs
 
         public char Peek() => _buffer[_readPosition];
 
-        public bool Skip(string toSkip)
+        public bool Skip(string characters)
         {
-            if (string.IsNullOrEmpty(toSkip))
+            if (string.IsNullOrEmpty(characters))
             {
                 return true;
             }
 
-            if (toSkip.Where((c, i) => _buffer[_readPosition + i] != c).Any())
+            if (characters.Where((c, i) => _buffer[_readPosition + i] != c).Any())
             {
                 return false;
             }
 
-            _readPosition += toSkip.Length;
+            _readPosition += characters.Length;
             return true;
         }
 
@@ -52,6 +52,20 @@ namespace ParserCs
                 }
             }
             while (_readPosition < BufferLength);
+        }
+
+        public char Read() => _buffer[_readPosition++];
+
+        public char[] Read(uint length)
+        {
+            var characters = new char[length];
+
+            for (var i = 0; i < length; i++)
+            {
+                characters[i] = Read();
+            }
+
+            return characters;
         }
 
         public void Dispose()
