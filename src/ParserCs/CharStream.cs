@@ -70,8 +70,13 @@ namespace ParserCs
                 return _buffer[_readPosition++];
             }
 
-            _textReader.Read(_buffer, 0, _bufferSize);
+            var charactersRead = _textReader.Read(_buffer, 0, _bufferSize);
             _readPosition = 0;
+
+            if (charactersRead < _bufferSize)
+            {
+                _buffer[charactersRead] = '\0';
+            }
 
             return _buffer[_readPosition++];
         }

@@ -86,3 +86,10 @@ let ``reading a number of characters when at the end of the stream will trigger 
 
     charStream.Read(5u) |> should equal [| 'a'; 'b'; 'c'; 'd'; 'e' |]
     charStream.Read(5u) |> should equal [| 'f'; 'g'; 'h'; 'i'; 'j' |]
+
+[<Fact>]
+let ``after a buffer reload, the buffer should be correctly null terminated``() =
+    use charStream = charStreamWithBufferSize "abcd" 3
+
+    charStream.Read(4u) |> ignore
+    charStream.Peek() |> should equal '\u0000'
