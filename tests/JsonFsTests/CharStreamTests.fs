@@ -88,8 +88,15 @@ let ``reading a number of characters when at the end of the stream will trigger 
     charStream.Read(5u) |> should equal [| 'f'; 'g'; 'h'; 'i'; 'j' |]
 
 [<Fact>]
-let ``after a buffer reload, the buffer should be correctly null terminated``() =
+let ``while skipping a sequence of characters, if the end of stream is reached, a buffer reload is triggered``() =
     use charStream = charStreamWithBufferSize "abcd" 3
 
-    charStream.Read(4u) |> ignore
+    charStream.Skip("abcd") |> should equal true
+    charStream.Peek() |> should equal '\u0000'
+
+[<Fact>]
+let ``while skipping whitespace, if the end of stream is reached, a buffer reload is triggered``() =
+    use charStream = charStreamWithBufferSize " \t\r\n" 3
+    
+    charStream.SkipWhitespace()
     charStream.Peek() |> should equal '\u0000'

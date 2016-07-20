@@ -38,12 +38,32 @@ namespace ParserCs
                 return true;
             }
 
-            if (characters.Where((c, i) => _buffer[_readPosition + i] != c).Any())
+            var readPositionOffset = 0;
+
+            foreach (var c in characters)
             {
-                return false;
+                if (readPositionOffset == _bufferSize)
+                {
+                    var charactersRead = _textReader.Read(_buffer, 0, _bufferSize);
+
+                    _readPosition = 0;
+                    readPositionOffset = 0;
+
+                    if (charactersRead < _bufferSize)
+                    {
+                        _buffer[charactersRead] = '\0';
+                    }
+                }
+
+                if (_buffer[_readPosition + readPositionOffset] != c)
+                {
+                    return false;
+                }
+
+                readPositionOffset++;
             }
 
-            _readPosition += characters.Length;
+            _readPosition += readPositionOffset;
             return true;
         }
 
@@ -51,16 +71,26 @@ namespace ParserCs
         {
             do
             {
-                if (char.IsWhiteSpace(_buffer[_readPosition]))
+                if (!char.IsWhiteSpace(_buffer[_readPosition]))
                 {
-                    _readPosition++;
+                    break;
                 }
-                else
+
+                _readPosition++;
+
+                if (_readPosition == _bufferSize)
                 {
-                    return;
+                    var charactersRead = _textReader.Read(_buffer, 0, _bufferSize);
+
+                    _readPosition = 0;
+
+                    if (charactersRead < _bufferSize)
+                    {
+                        _buffer[charactersRead] = '\0';
+                    }
                 }
             }
-            while (_readPosition < _bufferSize);
+            while (_buffer[_readPosition] != '\0');
         }
 
         public char Read()
