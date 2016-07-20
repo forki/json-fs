@@ -42,6 +42,11 @@ namespace ParserCs
 
         public bool Skip(string characters)
         {
+            if (_buffer[_readPosition] == NullTerminator)
+            {
+                return false;
+            }
+
             if (string.IsNullOrEmpty(characters))
             {
                 return true;
@@ -90,27 +95,27 @@ namespace ParserCs
         {
             if (CanReadFromBuffer())
             {
-                return _buffer[_readPosition++];
+                if (_buffer[_readPosition] == NullTerminator)
+                {
+                    return NullTerminator;
+                }
+                else
+                {
+                    return _buffer[_readPosition++];
+                }
             }
 
             FillBufferAndResetReadPosition();
+
+            if (_buffer[_readPosition] == NullTerminator)
+            {
+                return NullTerminator;
+            }
 
             return _buffer[_readPosition++];
         }
 
         private bool CanReadFromBuffer() => _readPosition < _bufferSize;
-
-        public char[] Read(uint length)
-        {
-            var characters = new char[length];
-
-            for (var i = 0; i < length; i++)
-            {
-                characters[i] = Read();
-            }
-
-            return characters;
-        }
 
         public void Dispose()
         {

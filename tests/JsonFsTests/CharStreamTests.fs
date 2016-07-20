@@ -67,25 +67,11 @@ let ``reading a single character should advance the stream``() =
     charStream.Peek() |> should equal 'b'
 
 [<Fact>]
-let ``reading a number of characters should advance the stream``() =
-    use charStream = charStream "abcd"
-
-    charStream.Read(3u) |> should equal [|'a'; 'b'; 'c'|]
-    charStream.Peek() |> should equal 'd'
-
-[<Fact>]
 let ``reading a single character when at the end of the stream will trigger a buffer reload``() =
     use charStream = charStreamWithBufferSize "ab" 1
 
     charStream.Read() |> should equal 'a'
     charStream.Read() |> should equal 'b'
-
-[<Fact>]
-let ``reading a number of characters when at the end of the stream will trigger a buffer reload``() =
-    use charStream = charStreamWithBufferSize "abcdefghij" 5
-
-    charStream.Read(5u) |> should equal [| 'a'; 'b'; 'c'; 'd'; 'e' |]
-    charStream.Read(5u) |> should equal [| 'f'; 'g'; 'h'; 'i'; 'j' |]
 
 [<Fact>]
 let ``while skipping a sequence of characters, if the end of stream is reached, a buffer reload is triggered``() =
@@ -100,3 +86,18 @@ let ``while skipping whitespace, if the end of stream is reached, a buffer reloa
     
     charStream.SkipWhitespace()
     charStream.Peek() |> should equal '\u0000'
+
+[<Fact>]
+let ``reading a single character, while at the end of the buffer, will always return the null terminator``() =
+    use charStream = charStreamWithBufferSize "a" 2
+
+    charStream.Skip("a") |> ignore
+    charStream.Read() |> should equal '\u0000'
+    charStream.Read() |> should equal '\u0000'
+
+[<Fact>]
+let ``skipping while at the end of the buffer, will always return false``() =
+    use charStream = charStreamWithBufferSize "abc" 2
+
+    charStream.Skip("abc") |> should equal true
+    charStream.Skip("d") |> should equal false
