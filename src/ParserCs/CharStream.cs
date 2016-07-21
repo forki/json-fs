@@ -42,7 +42,7 @@ namespace ParserCs
 
         public bool Skip(string characters)
         {
-            if (_buffer[_readPosition] == NullTerminator)
+            if (AtNullTerminator())
             {
                 return false;
             }
@@ -95,27 +95,19 @@ namespace ParserCs
         {
             if (CanReadFromBuffer())
             {
-                if (_buffer[_readPosition] == NullTerminator)
-                {
-                    return NullTerminator;
-                }
-                else
-                {
-                    return _buffer[_readPosition++];
-                }
+                return CheckAndReadCharacterFromBuffer();
             }
 
             FillBufferAndResetReadPosition();
 
-            if (_buffer[_readPosition] == NullTerminator)
-            {
-                return NullTerminator;
-            }
-
-            return _buffer[_readPosition++];
+            return CheckAndReadCharacterFromBuffer();
         }
 
         private bool CanReadFromBuffer() => _readPosition < _bufferSize;
+
+        private char CheckAndReadCharacterFromBuffer() => AtNullTerminator() ? NullTerminator : _buffer[_readPosition++];
+
+        private bool AtNullTerminator() => _buffer[_readPosition] == NullTerminator;
 
         public void Dispose()
         {
