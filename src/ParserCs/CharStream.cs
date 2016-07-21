@@ -38,8 +38,25 @@ namespace ParserCs
             }
         }
 
+        /// <summary>
+        /// Peeks at the next character within the character stream, without advancing the
+        /// reading position of the stream.
+        /// </summary>
+        /// <returns>The next character within the stream.</returns>
         public char Peek() => _buffer[_readPosition];
 
+        /// <summary>
+        /// Attempts to skip past a sequence of characters within the character stream.
+        /// The reading position of the stream will only change if a successful match has
+        /// occurred.
+        /// </summary>
+        /// <param name="characters">The characters to skip.</param>
+        /// <returns>True if the complete sequence of characters were skipped, otherwise false.</returns>
+        /// <remarks>
+        /// If skipping across a buffer boundary, the internal buffer will grow in size, to ensure
+        /// the reading position can be reset on a failed match. Otherwise the original reading position
+        /// will be lost during a buffer reload.
+        /// </remarks>
         public bool Skip(string characters)
         {
             if (AtNullTerminator())
@@ -76,6 +93,13 @@ namespace ParserCs
 
         private bool AtEndOfBuffer(int position) => position == _bufferSize;
 
+        /// <summary>
+        /// Will attempt to skip all whitespace characters in the character stream,
+        /// up until the next non-whitespace character.
+        /// </summary>
+        /// <remarks>
+        /// A whitespace character is either, a space, a tab, a carriage return or a line feed.
+        /// </remarks>
         public void SkipWhitespace()
         {
             while (char.IsWhiteSpace(_buffer[_readPosition]))
@@ -91,6 +115,12 @@ namespace ParserCs
 
         private bool EndOfBufferReached() => _readPosition == _bufferSize;
 
+        /// <summary>
+        /// Reads the next character from the character stream.
+        /// </summary>
+        /// <returns>
+        /// The next character or <see cref="NullTerminator"/> if at the end of the stream.
+        /// </returns>
         public char Read()
         {
             if (CanReadFromBuffer())
@@ -137,6 +167,6 @@ namespace ParserCs
         private bool _disposed;
 
         private const int DefaultBufferSize = 1024;
-        private const char NullTerminator = '\0';
+        public const char NullTerminator = '\0';
     }
 }
