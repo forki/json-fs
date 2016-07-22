@@ -19,6 +19,11 @@ namespace ParserCs
         /// </remarks>
         public CharStream(TextReader textReader, int bufferSize = DefaultBufferSize)
         {
+            if (textReader == null)
+            {
+                throw new ArgumentNullException(nameof(textReader));
+            }
+
             _textReader = textReader;
             _bufferSize = bufferSize;
             _buffer = new char[_bufferSize];
@@ -29,12 +34,16 @@ namespace ParserCs
         private void FillBufferAndResetReadPosition()
         {
             var charactersRead = _textReader.Read(_buffer, 0, _bufferSize);
+            NullTerminateBufferIfNotAtCapacity(charactersRead);
 
             _readPosition = 0;
+        }
 
-            if (charactersRead < _bufferSize)
+        private void NullTerminateBufferIfNotAtCapacity(int bufferWriteLength)
+        {
+            if (bufferWriteLength < _bufferSize)
             {
-                _buffer[charactersRead] = NullTerminator;
+                _buffer[bufferWriteLength] = NullTerminator;
             }
         }
 
@@ -69,29 +78,50 @@ namespace ParserCs
                 return true;
             }
 
-            var readPositionOffset = 0;
+            var previousReadPosition = _readPosition;
 
             foreach (var c in characters)
             {
-                if (AtEndOfBuffer(readPositionOffset))
+                if (EndOfBufferReached())
                 {
-                    FillBufferAndResetReadPosition();
-                    readPositionOffset = 0;
+                    var readSoFar = _readPosition - previousReadPosition;
+
+                    ExpandBufferAndPreserveContent(characters.Length, readSoFar);
                 }
 
-                if (_buffer[_readPosition + readPositionOffset] != c)
+                if (_buffer[_readPosition] != c)
                 {
+                    _readPosition = previousReadPosition;
                     return false;
                 }
 
-                readPositionOffset++;
+                _readPosition++;
             }
 
-            _readPosition += readPositionOffset;
             return true;
         }
 
-        private bool AtEndOfBuffer(int position) => position == _bufferSize;
+        private void ExpandBufferAndPreserveContent(int contentLength, int readSoFar)
+        {
+            var expandedBufferLength = Math.Max(_bufferSize*2, contentLength);
+            var expandedBuffer = new char[expandedBufferLength];
+
+            BlockCopy(_buffer, _readPosition - readSoFar, expandedBuffer, 0, readSoFar);
+            var charactersRead = _textReader.Read(expandedBuffer, _readPosition, expandedBufferLength - _readPosition);
+
+            _buffer = expandedBuffer;
+            _bufferSize = expandedBufferLength;
+
+            NullTerminateBufferIfNotAtCapacity(_readPosition + charactersRead);
+        }
+
+        private static void BlockCopy(char[] source, int sourceOffset, char[] destination, int desintationOffset, int count)
+        {
+            const int charSizeBytes = 2;
+
+            Buffer.BlockCopy(source, sourceOffset * charSizeBytes, destination, desintationOffset * charSizeBytes, 
+                count * charSizeBytes);
+        }
 
         /// <summary>
         /// Will attempt to skip all whitespace characters in the character stream,
@@ -139,6 +169,9 @@ namespace ParserCs
 
         private bool AtNullTerminator() => _buffer[_readPosition] == NullTerminator;
 
+        /// <summary>
+        /// Frees all underlying resources and closes the stream.
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
@@ -161,8 +194,8 @@ namespace ParserCs
         }
 
         private readonly TextReader _textReader;
-        private readonly char[] _buffer;
-        private readonly int _bufferSize;
+        private char[] _buffer;
+        private int _bufferSize;
         private int _readPosition;
         private bool _disposed;
 

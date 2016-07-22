@@ -101,3 +101,10 @@ let ``skipping while at the end of the buffer, will always return false``() =
 
     charStream.Skip("abc") |> should equal true
     charStream.Skip("d") |> should equal false
+
+[<Fact>]
+let ``when skipping over a buffer boundary, if a match fails, the read position should be reset``() =
+    use charStream = charStreamWithBufferSize "abcdef" 3
+
+    charStream.Skip("abcdf") |> should equal false
+    charStream.Peek() |> should equal 'a'
