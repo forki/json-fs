@@ -39,11 +39,11 @@ namespace ParserCs
             _readPosition = 0;
         }
 
-        private void NullTerminateBufferIfNotAtCapacity(int bufferWriteLength)
+        private void NullTerminateBufferIfNotAtCapacity(int charactersWritten)
         {
-            if (bufferWriteLength < _bufferSize)
+            if (charactersWritten < _bufferSize)
             {
-                _buffer[bufferWriteLength] = NullTerminator;
+                _buffer[charactersWritten] = NullTerminator;
             }
         }
 
