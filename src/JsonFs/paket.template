@@ -21,6 +21,6 @@ description
 	A super simple JSON library with all the functional goodness of F#
 dependencies
 	FSharp.Core >= 3.1.2.5
-	FParsec >= 1.0.2
 files
 	../../build/JsonFs.dll ==> lib/net45
+	../../build/ParserCs.dll ==> lib/net45
