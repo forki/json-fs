@@ -2,14 +2,8 @@
 
 open Xunit
 open FsUnit.Xunit
-open System.IO
 open ParserCs
-
-let charStream text =
-    new CharStream(new StringReader(text))
-
-let charStreamWithBufferSize text bufferSize =
-    new CharStream(new StringReader(text), bufferSize)
+open CharStreamFactory
 
 [<Fact>]
 let ``when peeking the next expected character should be returned``() =

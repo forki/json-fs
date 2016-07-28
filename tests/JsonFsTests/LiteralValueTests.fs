@@ -12,30 +12,10 @@ let ``the literal "true" is correctly parsed into a boolean``() =
     result |> should equal (Json.Bool true)
 
 [<Fact>]
-let ``the literal "true" is correctly parsed into a boolean, when trailed by whitespace``() =
-    let result = Json.parse "true  "
-
-    result |> should equal (Json.Bool true)
-
-[<Fact>]
 let ``the literal "false" is correctly parsed into a boolean``() =
     let result = Json.parse "false"
 
     result |> should equal (Json.Bool false)
-
-[<Fact>]
-let ``the literal "false" is correctly parsed into a boolean, when trailed by whitespace``() =
-    let result = Json.parse "false  "
-
-    result |> should equal (Json.Bool false)
-
-[<Fact>]
-let ``the literal "true" must in lowercase to be parsed otherwise an exception is thrown``() =
-    (fun() -> Json.parse "True" |> ignore) |> should throw typeof<Exception>
-
-[<Fact>]
-let ``the literal "false" must in lowercase to be parsed otherwise an exception is thrown``() =
-    (fun() -> Json.parse "False" |> ignore) |> should throw typeof<Exception>
 
 [<Fact>]
 let ``the literal "null" is correctly parsed into a unit``() =
@@ -44,11 +24,13 @@ let ``the literal "null" is correctly parsed into a unit``() =
     result |> should equal (Json.Null ())
 
 [<Fact>]
-let ``the literal "null" is correctly parsed into a unit, when trailed by whitespace``() =
-    let result = Json.parse "null  "
+let ``the literal "true" must in lowercase to be parsed otherwise an exception is thrown``() =
+    (fun() -> Json.parse "True" |> ignore) |> should throw typeof<UnrecognisedJsonException>
 
-    result |> should equal (Json.Null ())
+[<Fact>]
+let ``the literal "false" must in lowercase to be parsed otherwise an exception is thrown``() =
+    (fun() -> Json.parse "False" |> ignore) |> should throw typeof<UnrecognisedJsonException>
 
 [<Fact>]
 let ``the literal "null" must be in lowercase to be parsed otherwise an exception is thrown``() =
-    (fun() -> Json.parse "Null" |> ignore) |> should throw typeof<Exception>
+    (fun() -> Json.parse "Null" |> ignore) |> should throw typeof<UnrecognisedJsonException>

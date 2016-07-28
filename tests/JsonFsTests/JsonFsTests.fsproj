@@ -85,7 +85,9 @@
     <Compile Include="StringTests.fs" />
     <Compile Include="ArrayTests.fs" />
     <Compile Include="ObjectTests.fs" />
+    <Compile Include="CharStreamFactory.fs" />
     <Compile Include="CharStreamTests.fs" />
+    <Compile Include="NumberBufferTests.fs" />
     <Content Include="App.config" />
     <None Include="paket.references" />
   </ItemGroup>

@@ -3,7 +3,7 @@ open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 open JsonFs
 
-let simpleJson = "{\"FirstName\": \"John\", \"LastName\": \"Doe\", \"DOB\": \"21/03/1984\", \"Age\": 32, \"Occupation\": \"Line Manager\"}"
+let simpleJson = "{\"FirstName\": \"John\", \"LastName\": \"Doe\", \"DOB\": \"21/03/1984\", \"Age\": 032, \"Occupation\": \"Line Manager\"}"
 
 let parseSimpleJsonWithNewtonsoft =
     let sw = Stopwatch()
