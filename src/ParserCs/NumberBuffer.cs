@@ -1,7 +1,9 @@
 ﻿namespace ParserCs
 {
     /// <summary>
-    /// 
+    /// Builds a number, by performing a fast forward only read from a <see cref="CharStream"/>
+    /// into an internal buffer. Any reads, will advance the reading position within the
+    /// <see cref="CharStream"/>.
     /// </summary>
     public sealed class NumberBuffer
     {
