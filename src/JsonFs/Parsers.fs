@@ -26,7 +26,7 @@ module Parsers =
     let private parseNumber (stream: CharStream) =
         try
             let number = NumberBuffer.FromStream(stream).ToString()
-            Number (decimal number)
+            decimal number
         with
         | :? System.FormatException -> raise (UnrecognisedJsonException "invalid number");
 
@@ -39,7 +39,7 @@ module Parsers =
         if not (stream.Skip("\"")) then
             raise (UnrecognisedJsonException "expecting a \" at the end of the string")
 
-        String jsonString
+        jsonString
 
     let private parseArray (stream: CharStream) =
         if not (stream.Skip("[")) then
@@ -61,7 +61,45 @@ module Parsers =
             if not (stream.Skip("]")) then
                 raise (UnrecognisedJsonException "expecting a ] at the end of the array")
 
-        Array (List.rev jsonArray)
+        List.rev jsonArray
+
+    let private parseObject (stream: CharStream) =
+        if not (stream.Skip("{")) then
+            raise (UnrecognisedJsonException "expecting a { at the beginning of the object")
+
+        stream.SkipWhitespace()
+
+        let mutable jsonMap = []
+
+        if not (stream.Skip("}")) then
+            let property = parseString stream
+            
+            stream.SkipWhitespace()
+            stream.Skip(":") |> ignore
+            stream.SkipWhitespace()
+
+            let value = pjson stream
+            stream.SkipWhitespace()
+
+            jsonMap <- [property, value]
+
+            while stream.Skip(",") do
+                stream.SkipWhitespace()
+                let property = parseString stream
+
+                stream.SkipWhitespace()
+                stream.Skip(":") |> ignore
+                stream.SkipWhitespace()
+
+                let value = pjson stream
+                stream.SkipWhitespace()
+
+                jsonMap <- (property, value)::jsonMap
+
+            if not (stream.Skip("}")) then
+                raise (UnrecognisedJsonException "expecting a } at the end of the object")
+
+        Map.ofList (List.rev jsonMap)
 
     [<RequireQualifiedAccess>]
     module Json =
@@ -69,12 +107,13 @@ module Parsers =
 
         let private parseJson (stream: CharStream) =
             match stream.Peek() with
-            | '[' -> parseArray stream
-            | '"' -> parseString stream
+            | '{' -> parseObject stream |> Object
+            | '[' -> parseArray stream |> Array
+            | '"' -> parseString stream |> String
             | 't' when stream.Skip("true") -> Bool true
             | 'f' when stream.Skip("false") -> Bool false
             | 'n' when stream.Skip("null") -> Null ()
-            | _ -> parseNumber stream
+            | _ -> parseNumber stream |> Number
 
         pjsonRef := parseJson
 

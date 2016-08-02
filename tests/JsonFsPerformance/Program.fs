@@ -9,27 +9,22 @@ let parseSimpleJsonWithNewtonsoft =
     let sw = Stopwatch()
     sw.Start()
 
-    for i = 1 to 1000 do
+    for i = 1 to 100000 do
         JObject.Parse(simpleJson) |> ignore
 
     sw.Stop()
-    printfn "Parsing 1000 simple documents with Newtonsoft took: %O" sw.Elapsed
+    printfn "Parsing 100000 simple documents with Newtonsoft took: %O" sw.Elapsed
 
 let parseSimpleJsonWithJsonFs =
     let sw = Stopwatch()
     sw.Start()
 
-    for i = 1 to 1000 do
+    for i = 1 to 100000 do
         Json.parse simpleJson |> ignore
 
     sw.Stop()
-    printfn "Parsing 1000 simple documents with JsonFs took: %O" sw.Elapsed
+    printfn "Parsing 100000 simple documents with JsonFs took: %O" sw.Elapsed
 
 [<EntryPoint>]
 let main argv = 
-    
-    // Parse using a simple Json document first
-    parseSimpleJsonWithNewtonsoft
-    parseSimpleJsonWithNewtonsoft
-
     0
