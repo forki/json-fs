@@ -3,36 +3,36 @@
 namespace ParserCs
 {
     /// <summary>
-    /// Builds a string, by performing a fast forward only read from a <see cref="CharStream"/>
+    /// Builds a string, by performing a fast forward only read from a <see cref="JsonStream"/>
     /// into an internal buffer. Any reads, will advance the reading position within the
-    /// <see cref="CharStream"/>.
+    /// <see cref="JsonStream"/>.
     /// </summary>
-    public sealed class StringBuffer
+    public sealed class JsonString
     {
         public char[] Buffer { get; }
         public int BufferSize { get; }
 
-        private StringBuffer(char[] buffer, int bufferSize)
+        private JsonString(char[] buffer, int bufferSize)
         {
             Buffer = buffer;
             BufferSize = bufferSize;
         }
 
         /// <summary>
-        /// Builds a <see cref="StringBuffer"/> by performing a fast forward only read from the
-        /// given <see cref="CharStream"/>. Any characters between a set of quotation marks are 
+        /// Builds a <see cref="JsonString"/> by performing a fast forward only read from the
+        /// given <see cref="JsonStream"/>. Any characters between a set of quotation marks are 
         /// read into the internal buffer.
         /// </summary>
-        /// <param name="stream">The <see cref="CharStream"/> to read from.</param>
-        /// <returns>A new instance of a <see cref="StringBuffer"/>.</returns>
-        public static StringBuffer FromStream(CharStream stream)
+        /// <param name="stream">The <see cref="JsonStream"/> to read from.</param>
+        /// <returns>A new instance of a <see cref="JsonString"/>.</returns>
+        public static JsonString FromStream(JsonStream stream)
         {
             var buffer = new char[1024];
             var readPosition = 0;
 
             while (true)
             {
-                if (stream.Peek() == '"' || stream.Peek() == CharStream.NullTerminator)
+                if (stream.Peek() == '"' || stream.Peek() == JsonStream.NullTerminator)
                 {
                     break;
                 }
@@ -85,10 +85,10 @@ namespace ParserCs
                 }
             }
 
-            return new StringBuffer(buffer, readPosition);
+            return new JsonString(buffer, readPosition);
         }
 
-        private static char ParseUnicode(CharStream stream)
+        private static char ParseUnicode(JsonStream stream)
         {
             // TODO: support reading n characters from the stream returns char[]
             var hex = new[] { stream.Read(), stream.Read(), stream.Read(), stream.Read() };

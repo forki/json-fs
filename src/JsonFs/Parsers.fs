@@ -1,122 +1,152 @@
 ﻿namespace JsonFs
 
-type Json = 
-    | Bool of bool
-    | Null of unit
-    | Number of decimal
-    | String of string
-    | Array of Json list
-    | Object of Map<string, Json>
-
 [<AutoOpen>]
 module Parsers =
     open ParserCs
 
-    type Parser<'u> = CharStream -> 'u
+    (* JSON grammar as defined within the RFC7159 specification
+       
+       See: https://tools.ietf.org/html/rfc7159#section-2 for more details *)
 
-    let createParserForwardedToRef() =
-        let dummyParser = fun stream -> failwith "a parser created with createParserForwardedToRef was not initialized"
-        let r = ref dummyParser
-        (fun stream -> !r stream), r : Parser<'u> * Parser<'u> ref
+    [<Literal>]
+    let private beginArray = '['
+    [<Literal>]
+    let private endArray = ']'
+    [<Literal>]
+    let private beginObject = '{'
+    [<Literal>]
+    let private endObject = '}'
+    [<Literal>]
+    let private valueSeparator = ','
+    [<Literal>]
+    let private nameSeparator = ':'
+    [<Literal>]
+    let private quotationMark = '"'
 
-    let pjson, pjsonRef = createParserForwardedToRef()
+    (* By forward declaring the parser, dependency ordering within the module disappears  *)
+    
+    type private Parser<'t> = JsonStream -> 't
 
-    exception UnrecognisedJsonException of string
+    let createForwardDeclaredParser() =
+        let parser = fun stream -> failwith "the parser has not yet been initialised"
+        parser : Parser<'t>
 
-    let private parseNumber (stream: CharStream) =
+    let mutable private pjson = createForwardDeclaredParser()
+
+    let private parseNumber (stream: JsonStream) =
         try
-            let number = NumberBuffer.FromStream(stream).ToString()
+            let number = JsonNumber.FromStream(stream).ToString()
             decimal number
         with
-        | :? System.FormatException -> raise (UnrecognisedJsonException "invalid number");
+        | :? System.FormatException -> raise (UnexpectedJsonException());
 
-    let private parseString (stream: CharStream) =        
-        if not (stream.Skip("\"")) then
-            raise (UnrecognisedJsonException "expecting a \" at the beginning of the string")
-
-        let jsonString = StringBuffer.FromStream(stream).ToString()
-        
-        if not (stream.Skip("\"")) then
-            raise (UnrecognisedJsonException "expecting a \" at the end of the string")
+    let private parseString (stream: JsonStream) =        
+        stream.Expect quotationMark
+        let jsonString = JsonString.FromStream(stream).ToString()
+        stream.Expect quotationMark
 
         jsonString
 
-    let private parseArray (stream: CharStream) =
-        if not (stream.Skip("[")) then
-            raise (UnrecognisedJsonException "expecting a [ at the beginning of the array")
-
-        stream.SkipWhitespace()
-
-        let mutable jsonArray = []
-
-        if not (stream.Skip("]")) then
-            jsonArray <- [pjson stream]
+    let emptyBetween (startChar: char) (endChar: char) (stream: JsonStream) =
+        let mutable empty = false
+        
+        if stream.Skip startChar then
             stream.SkipWhitespace()
 
-            while stream.Skip(",") do
+            if stream.Skip endChar then
+                empty <- true
+
+        empty
+
+    let emptyArray =
+        fun stream -> emptyBetween beginArray endArray stream
+
+    let emptyObject =
+        fun stream -> emptyBetween beginObject endObject stream
+        
+    let private parseArray (stream: JsonStream) =
+        let mutable jsonArray = []
+
+        if not (emptyArray stream) then
+            stream.SkipWhitespace()
+            jsonArray <- [pjson stream] // this operator is the argument
+            stream.SkipWhitespace()
+
+            while stream.Skip valueSeparator do
                 stream.SkipWhitespace()
-                jsonArray <- (pjson stream)::jsonArray
+                jsonArray <- (pjson stream)::jsonArray // this operator is the argument
                 stream.SkipWhitespace()
 
-            if not (stream.Skip("]")) then
-                raise (UnrecognisedJsonException "expecting a ] at the end of the array")
+            stream.Expect endArray
 
         List.rev jsonArray
 
-    let private parseObject (stream: CharStream) =
-        if not (stream.Skip("{")) then
-            raise (UnrecognisedJsonException "expecting a { at the beginning of the object")
+    let private parseObject (stream: JsonStream) =
+        let mutable jsonObject = []
 
-        stream.SkipWhitespace()
-
-        let mutable jsonMap = []
-
-        if not (stream.Skip("}")) then
+        if not (emptyObject stream) then
+            stream.SkipWhitespace()
             let property = parseString stream
             
             stream.SkipWhitespace()
-            stream.Skip(":") |> ignore
+            stream.Skip nameSeparator |> ignore
             stream.SkipWhitespace()
 
             let value = pjson stream
             stream.SkipWhitespace()
 
-            jsonMap <- [property, value]
+            jsonObject <- [property, value] // this operator is the argument
 
-            while stream.Skip(",") do
+            while stream.Skip valueSeparator do
                 stream.SkipWhitespace()
                 let property = parseString stream
 
                 stream.SkipWhitespace()
-                stream.Skip(":") |> ignore
+                stream.Skip nameSeparator |> ignore
                 stream.SkipWhitespace()
 
                 let value = pjson stream
                 stream.SkipWhitespace()
 
-                jsonMap <- (property, value)::jsonMap
+                jsonObject <- (property, value)::jsonObject // this operator is the argument
+                ()
 
-            if not (stream.Skip("}")) then
-                raise (UnrecognisedJsonException "expecting a } at the end of the object")
-
-        Map.ofList (List.rev jsonMap)
+            stream.Expect endObject
+            
+        Map.ofList (List.rev jsonObject)
 
     [<RequireQualifiedAccess>]
     module Json =
         open System.IO
 
-        let private parseJson (stream: CharStream) =
+        let internal jsonObject =
+            fun stream -> parseObject stream |> Object
+
+        let internal jsonArray =
+            fun stream -> parseArray stream |> Array
+
+        let internal jsonString =
+            fun stream -> parseString stream |> String
+
+        let internal jsonNumber =
+            fun stream -> parseNumber stream |> Number
+
+        let private parseJson (stream: JsonStream) =
             match stream.Peek() with
-            | '{' -> parseObject stream |> Object
-            | '[' -> parseArray stream |> Array
-            | '"' -> parseString stream |> String
+            | '{' -> jsonObject stream
+            | '[' -> jsonArray stream
+            | '"' -> jsonString stream
             | 't' when stream.Skip("true") -> Bool true
             | 'f' when stream.Skip("false") -> Bool false
             | 'n' when stream.Skip("null") -> Null ()
-            | _ -> parseNumber stream |> Number
+            | _ -> jsonNumber stream
 
-        pjsonRef := parseJson
+        do pjson <- parseJson
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="json"></param>
         let parse json =
-            use stream = new CharStream(new StringReader(json))      
+            use stream = new JsonStream(new StringReader(json))      
             pjson stream

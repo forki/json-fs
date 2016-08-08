@@ -23,4 +23,4 @@ dependencies
 	FSharp.Core >= 3.1.2.5
 files
 	../../build/JsonFs.dll ==> lib/net45
-	../../build/ParserCs.dll ==> lib/net45
+	../../build/JsonCs.dll ==> lib/net45

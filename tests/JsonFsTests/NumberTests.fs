@@ -3,6 +3,7 @@
 open Xunit
 open FsUnit.Xunit
 open JsonFs
+open ParserCs
 open System
 
 [<Fact>]
@@ -67,8 +68,8 @@ let ``the numeric string "1.2345e02" is parsed into a decimal value of 1.2345e02
 
 [<Fact>]
 let ``the numeric string "1.2345e" contains an invalid exponent and an exception is thrown``() =
-    (fun() -> Json.parse "1.2345e" |> ignore) |> should throw typeof<UnrecognisedJsonException>
+    (fun() -> Json.parse "1.2345e" |> ignore) |> should throw typeof<UnexpectedJsonException>
 
 [<Fact>]
 let ``the numeric string "1.2345E+" contains an invalid exponent and an exception is thrown``() =
-    (fun() -> Json.parse "1.2345E+" |> ignore) |> should throw typeof<UnrecognisedJsonException>
+    (fun() -> Json.parse "1.2345E+" |> ignore) |> should throw typeof<UnexpectedJsonException>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace ParserCs
 {
@@ -7,17 +8,18 @@ namespace ParserCs
     /// A character stream that performs fast forward only reads and does not cache internally.
     /// Any form of backtracking is not supported.
     /// </summary>
-    public class CharStream : IDisposable
+    public class JsonStream : IDisposable
     {
         /// <summary>
-        /// Constructs a new instance of a <see cref="CharStream"/>.
+        /// Constructs a new instance of a <see cref="JsonStream"/>.
         /// </summary>
         /// <param name="textReader">A reader that can read a sequential series of characters.</param>
         /// <param name="bufferSize">The size of the internal read buffer. Use to override the default.</param>
+        /// <exception cref=""></exception>
         /// <remarks>
         /// The default size of the internal read buffer is 1024 characters.
         /// </remarks>
-        public CharStream(TextReader textReader, int bufferSize = DefaultBufferSize)
+        public JsonStream(TextReader textReader, int bufferSize = DefaultBufferSize)
         {
             if (textReader == null)
             {
@@ -53,6 +55,39 @@ namespace ParserCs
         /// </summary>
         /// <returns>The next character within the stream.</returns>
         public char Peek() => _buffer[_readPosition];
+
+        /// <summary>
+        /// Attempts to skip past a single character within the character stream.
+        /// The reading position of the stream will only change if a successful match has
+        /// occurred.
+        /// </summary>
+        /// <param name="character">The character to skip.</param>
+        /// <returns>True if the character was skipped, otherwise false.</returns>
+        /// <remarks>
+        /// If skipping across a buffer boundary, the internal buffer will grow in size, to ensure
+        /// the reading position can be reset on a failed match. Otherwise the original reading position
+        /// will be lost during a buffer reload.
+        /// </remarks>
+        public bool Skip(char character)
+        {
+            if (AtNullTerminator())
+            {
+                return false;
+            }
+
+            if (EndOfBufferReached())
+            {
+                ExpandBufferAndPreserveContent(1, _readPosition);
+            }
+
+            if (_buffer[_readPosition] != character)
+            {
+                return false;
+            }
+
+            _readPosition++;
+            return true;
+        }
 
         /// <summary>
         /// Attempts to skip past a sequence of characters within the character stream.
@@ -168,6 +203,46 @@ namespace ParserCs
         private char CheckAndReadCharacterFromBuffer() => AtNullTerminator() ? NullTerminator : _buffer[_readPosition++];
 
         private bool AtNullTerminator() => _buffer[_readPosition] == NullTerminator;
+
+        /// <summary>
+        /// Reads a number of characters from the character stream.
+        /// </summary>
+        /// <param name="expectedCharacters">The number of characters to be read.</param>
+        /// <returns>An array of characters.</returns>
+        /// <remarks>
+        /// An array of a fixed size will always be returned by this method. If the number of
+        /// <paramref name="expectedCharacters"/> could not have been read, the array will be
+        /// padded with null terminator characters as required.
+        /// </remarks>
+        public char[] Read(int expectedCharacters)
+        {
+            var characters = new char[expectedCharacters];
+
+            for (var i = 0; i < expectedCharacters; i++)
+            {
+                characters[i] = Read();
+            }
+     
+            return characters;
+        }
+
+        /// <summary>
+        /// Check that the next character within the stream is as expected.
+        /// </summary>
+        /// <param name="character">The expected character within the stream.</param>
+        /// <exception cref="UnexpectedJsonException">
+        /// The expected character did not appear within the <see cref="JsonStream"/> at the
+        /// current read position.
+        /// </exception>
+        public void Expect(char character)
+        {
+            var readCharacter = CheckAndReadCharacterFromBuffer();
+
+            if (character != readCharacter)
+            {
+                throw new UnexpectedJsonException();
+            }
+        }
 
         /// <summary>
         /// Frees all underlying resources and closes the stream.

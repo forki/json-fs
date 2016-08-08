@@ -3,6 +3,7 @@
 open Xunit
 open FsUnit.Xunit
 open JsonFs
+open ParserCs
 open System
 
 [<Fact>]
@@ -25,12 +26,12 @@ let ``the literal "null" is correctly parsed into a unit``() =
 
 [<Fact>]
 let ``the literal "true" must in lowercase to be parsed otherwise an exception is thrown``() =
-    (fun() -> Json.parse "True" |> ignore) |> should throw typeof<UnrecognisedJsonException>
+    (fun() -> Json.parse "True" |> ignore) |> should throw typeof<UnexpectedJsonException>
 
 [<Fact>]
 let ``the literal "false" must in lowercase to be parsed otherwise an exception is thrown``() =
-    (fun() -> Json.parse "False" |> ignore) |> should throw typeof<UnrecognisedJsonException>
+    (fun() -> Json.parse "False" |> ignore) |> should throw typeof<UnexpectedJsonException>
 
 [<Fact>]
 let ``the literal "null" must be in lowercase to be parsed otherwise an exception is thrown``() =
-    (fun() -> Json.parse "Null" |> ignore) |> should throw typeof<UnrecognisedJsonException>
+    (fun() -> Json.parse "Null" |> ignore) |> should throw typeof<UnexpectedJsonException>

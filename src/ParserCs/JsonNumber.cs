@@ -1,16 +1,16 @@
 ﻿namespace ParserCs
 {
     /// <summary>
-    /// Builds a number, by performing a fast forward only read from a <see cref="CharStream"/>
+    /// Builds a number, by performing a fast forward only read from a <see cref="JsonStream"/>
     /// into an internal buffer. Any reads, will advance the reading position within the
-    /// <see cref="CharStream"/>.
+    /// <see cref="JsonStream"/>.
     /// </summary>
-    public sealed class NumberBuffer
+    public sealed class JsonNumber
     {
         public char[] Buffer { get; }
         public int BufferSize { get; }
 
-        private NumberBuffer(char[] buffer, int bufferSize)
+        private JsonNumber(char[] buffer, int bufferSize)
         {
             Buffer = buffer;
             BufferSize = bufferSize;
@@ -21,7 +21,7 @@
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public static NumberBuffer FromStream(CharStream stream)
+        public static JsonNumber FromStream(JsonStream stream)
         {
             var buffer = new char[1024];
             var readPosition = 0;
@@ -38,7 +38,7 @@
                 }
             }
 
-            return new NumberBuffer(buffer, readPosition);
+            return new JsonNumber(buffer, readPosition);
         }
 
         private static bool IsNumber(char character)
