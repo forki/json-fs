@@ -15,17 +15,11 @@ namespace ParserCs
         /// </summary>
         /// <param name="textReader">A reader that can read a sequential series of characters.</param>
         /// <param name="bufferSize">The size of the internal read buffer. Use to override the default.</param>
-        /// <exception cref=""></exception>
         /// <remarks>
         /// The default size of the internal read buffer is 1024 characters.
         /// </remarks>
         public JsonStream(TextReader textReader, int bufferSize = DefaultBufferSize)
         {
-            if (textReader == null)
-            {
-                throw new ArgumentNullException(nameof(textReader));
-            }
-
             _textReader = textReader;
             _bufferSize = bufferSize;
             _buffer = new char[_bufferSize];
