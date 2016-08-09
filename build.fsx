@@ -147,7 +147,7 @@ Target "RunUnitTests" (fun _ ->
             Output = codeCoverageReport
             Register = RegisterType.RegisterUser
             OptionalArguments = "-excludebyfile:*\*AssemblyInfo.fs;*\*AssemblyInfo.cs -hideskipped:File"
-            Filter = "+[JsonFs*]* +[ParserCs*]* -[*Tests]* -[*Performance]*"
+            Filter = "+[JsonFs*]* +[JsonCs*]* -[*Tests]* -[*Performance]*"
         })
         (assembliesToTest + " -appveyor -noshadow")
 )

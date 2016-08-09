@@ -2,7 +2,7 @@
 
 [<AutoOpen>]
 module Parsers =
-    open ParserCs
+    open JsonCs
 
     (* JSON grammar as defined within the RFC7159 specification
        

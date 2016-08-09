@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace ParserCs
+namespace JsonCs
 {
     /// <summary>
     /// A character stream that performs fast forward only reads and does not cache internally.

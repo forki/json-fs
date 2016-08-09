@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ParserCs
+namespace JsonCs
 {
     /// <summary>
     /// 

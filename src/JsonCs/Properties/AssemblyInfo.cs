@@ -3,9 +3,9 @@
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ParserCs")]
+[assembly: AssemblyTitle("JsonCs")]
 [assembly: AssemblyCompany("Coda Solutions Ltd")]
-[assembly: AssemblyProduct("ParserCs")]
+[assembly: AssemblyProduct("JsonCs")]
 [assembly: AssemblyCopyright("Copyright © 2016")]
 
 // Version information for an assembly consists of the following four values:

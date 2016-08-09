@@ -1,5 +1,5 @@
 ﻿module JsonStreamFactory
-    open ParserCs
+    open JsonCs
     open System.IO
 
     let jsonStream text =

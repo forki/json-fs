@@ -2,7 +2,7 @@
 
 open Xunit
 open FsUnit.Xunit
-open ParserCs;
+open JsonCs
 open JsonStreamFactory
 
 [<Fact>]

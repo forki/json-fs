@@ -3,7 +3,7 @@
 open Xunit
 open FsUnit.Xunit
 open JsonFs
-open ParserCs
+open JsonCs
 open System
 
 [<Fact>]

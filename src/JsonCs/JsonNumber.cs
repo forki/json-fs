@@ -1,4 +1,4 @@
-﻿namespace ParserCs
+﻿namespace JsonCs
 {
     /// <summary>
     /// Builds a number, by performing a fast forward only read from a <see cref="JsonStream"/>

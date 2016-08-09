@@ -21,7 +21,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "JsonFsTests", "tests\JsonFs
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "JsonFsPerformance", "tests\JsonFsPerformance\JsonFsPerformance.fsproj", "{33994A52-01E7-4794-B470-C48F59D9BF5E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParserCs", "src\ParserCs\ParserCs.csproj", "{6DD6B87C-027B-489A-9317-E26979BB05C6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonCs", "src\JsonCs\JsonCs.csproj", "{6DD6B87C-027B-489A-9317-E26979BB05C6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
