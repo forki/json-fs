@@ -104,6 +104,20 @@ let ``when skipping over a buffer boundary, if a match fails, the read position 
     stream.Peek() |> should equal 'a'
 
 [<Fact>]
+let ``skipping a single character should advance the stream``() =
+    use stream = jsonStreamWithBufferSize "ab" 2
+
+    stream.Skip('a') |> should equal true
+    stream.Peek() |> should equal 'b'
+
+[<Fact>]
+let ``skipping a single character will not advance the stream if the character does not match``() =
+    use stream = jsonStreamWithBufferSize "ab" 2
+
+    stream.Skip('b') |> should equal false
+    stream.Peek() |> should equal 'a'
+
+[<Fact>]
 let ``reading multiple characters should advance the stream``() =
     use stream = jsonStream "abcdef"
 
