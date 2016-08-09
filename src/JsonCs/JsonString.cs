@@ -32,12 +32,12 @@ namespace JsonCs
 
             while (true)
             {
-                if (stream.Peek() == '"' || stream.Peek() == JsonStream.NullTerminator)
+                if (EndOfStringReached(stream.Peek()))
                 {
                     break;
                 }
 
-                if (stream.Peek() == '\\')
+                if (IsEscapedString(stream.Peek()))
                 {
                     stream.Read();
                     char escapedCharacter;
@@ -72,9 +72,7 @@ namespace JsonCs
                             escapedCharacter = ParseUnicode(stream);
                             break;
                         default:
-                            // TODO: break out and stop writing to the buffer
-                            escapedCharacter = ' ';
-                            break;
+                            throw new UnexpectedJsonException();
                     }
 
                     buffer[readPosition++] = escapedCharacter;
@@ -88,9 +86,20 @@ namespace JsonCs
             return new JsonString(buffer, readPosition);
         }
 
+        private static bool EndOfStringReached(char character) => character == '"' || character == JsonStream.NullTerminator;
+
+        private static bool IsEscapedString(char character) => character == '\\';
+
         private static char ParseUnicode(JsonStream stream)
         {
-            return (char)int.Parse(new string(stream.Read(4)), NumberStyles.HexNumber);
+            try
+            {
+                return (char) int.Parse(new string(stream.Read(4)), NumberStyles.HexNumber);
+            }
+            catch
+            {
+                throw new UnexpectedJsonException();
+            }
         }
 
         public override string ToString() => new string(Buffer, 0, BufferSize);
