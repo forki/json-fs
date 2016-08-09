@@ -90,10 +90,7 @@ namespace JsonCs
 
         private static char ParseUnicode(JsonStream stream)
         {
-            // TODO: support reading n characters from the stream returns char[]
-            var hex = new[] { stream.Read(), stream.Read(), stream.Read(), stream.Read() };
-
-            return (char)int.Parse(new string(hex), NumberStyles.HexNumber);
+            return (char)int.Parse(new string(stream.Read(4)), NumberStyles.HexNumber);
         }
 
         public override string ToString() => new string(Buffer, 0, BufferSize);
