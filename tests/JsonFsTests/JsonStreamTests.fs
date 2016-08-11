@@ -118,6 +118,21 @@ let ``skipping a single character will not advance the stream if the character d
     stream.Peek() |> should equal 'a'
 
 [<Fact>]
+let ``skipping a single character at the end of the stream always returns false``() =
+    use stream = jsonStreamWithBufferSize "a" 1
+
+    stream.Skip 'a' |> should equal true
+    stream.Skip 'b' |> should equal false
+    stream.Skip 'b' |> should equal false
+
+[<Fact>]
+let ``skipping a single character at the end of the stream, will cause the buffer to be reloaded``() =
+    use stream = jsonStreamWithBufferSize "ab" 1
+
+    stream.Skip 'a' |> should equal true
+    stream.Skip 'b' |> should equal true
+
+[<Fact>]
 let ``reading multiple characters should advance the stream``() =
     use stream = jsonStream "abcdef"
 

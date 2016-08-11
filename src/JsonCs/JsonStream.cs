@@ -63,7 +63,7 @@ namespace JsonCs
         /// </remarks>
         public bool Skip(char character)
         {
-            if (AtNullTerminator())
+            if (CanReadFromBuffer() && AtNullTerminator())
             {
                 return false;
             }
@@ -96,14 +96,14 @@ namespace JsonCs
         /// </remarks>
         public bool Skip(string characters)
         {
-            if (AtNullTerminator())
-            {
-                return false;
-            }
-
             if (string.IsNullOrEmpty(characters))
             {
                 return true;
+            }
+
+            if (CanReadFromBuffer() && AtNullTerminator())
+            {
+                return false;
             }
 
             var previousReadPosition = _readPosition;
