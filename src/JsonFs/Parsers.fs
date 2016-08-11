@@ -47,35 +47,63 @@ module Parsers =
 
         jsonString
 
-    let emptyBetween (startChar: char) (endChar: char) (stream: JsonStream) =
+    let private emptyBetween (startChar: char) (endChar: char) (stream: JsonStream) =
         let mutable empty = false
         
-        if stream.Skip startChar then
-            stream.SkipWhitespace()
+        stream.Skip startChar |> ignore
+        stream.SkipWhitespace()
 
-            if stream.Skip endChar then
-                empty <- true
+        if stream.Skip endChar then
+            empty <- true
 
         empty
 
-    let emptyArray =
+    let private emptyArray =
         fun stream -> emptyBetween beginArray endArray stream
 
-    let emptyObject =
+    let private emptyObject =
         fun stream -> emptyBetween beginObject endObject stream
         
+    let private parseArrayElement (stream: JsonStream) =
+        stream.SkipWhitespace()
+        let arrayElement = pjson stream
+        stream.SkipWhitespace()
+
+        arrayElement
+
+    let private firstArrayElement =
+        fun stream -> [parseArrayElement stream]
+
+    let private appendArrayElement =
+        fun stream array -> (parseArrayElement stream)::array
+
+    let private parseObjectElement (stream: JsonStream) =
+        stream.SkipWhitespace()
+        let property = parseString stream
+            
+        stream.SkipWhitespace()
+        stream.Expect nameSeparator
+        stream.SkipWhitespace()
+
+        let value = pjson stream
+        stream.SkipWhitespace()
+
+        (property, value)
+
+    let private firstObjectElement =
+        fun stream -> [parseObjectElement stream]
+
+    let private appendObjectElement =
+        fun stream array -> (parseObjectElement stream)::array
+
     let private parseArray (stream: JsonStream) =
         let mutable jsonArray = []
 
         if not (emptyArray stream) then
-            stream.SkipWhitespace()
-            jsonArray <- [pjson stream] // this operator is the argument
-            stream.SkipWhitespace()
+            jsonArray <- firstArrayElement stream
 
             while stream.Skip valueSeparator do
-                stream.SkipWhitespace()
-                jsonArray <- (pjson stream)::jsonArray // this operator is the argument
-                stream.SkipWhitespace()
+                jsonArray <- appendArrayElement stream jsonArray
 
             stream.Expect endArray
 
@@ -85,31 +113,10 @@ module Parsers =
         let mutable jsonObject = []
 
         if not (emptyObject stream) then
-            stream.SkipWhitespace()
-            let property = parseString stream
-            
-            stream.SkipWhitespace()
-            stream.Skip nameSeparator |> ignore
-            stream.SkipWhitespace()
-
-            let value = pjson stream
-            stream.SkipWhitespace()
-
-            jsonObject <- [property, value] // this operator is the argument
+            jsonObject <- firstObjectElement stream
 
             while stream.Skip valueSeparator do
-                stream.SkipWhitespace()
-                let property = parseString stream
-
-                stream.SkipWhitespace()
-                stream.Skip nameSeparator |> ignore
-                stream.SkipWhitespace()
-
-                let value = pjson stream
-                stream.SkipWhitespace()
-
-                jsonObject <- (property, value)::jsonObject // this operator is the argument
-                ()
+                jsonObject <- appendObjectElement stream jsonObject
 
             stream.Expect endObject
             
@@ -119,16 +126,16 @@ module Parsers =
     module Json =
         open System.IO
 
-        let internal jsonObject =
+        let private jsonObject =
             fun stream -> parseObject stream |> Object
 
-        let internal jsonArray =
+        let private jsonArray =
             fun stream -> parseArray stream |> Array
 
-        let internal jsonString =
+        let private jsonString =
             fun stream -> parseString stream |> String
 
-        let internal jsonNumber =
+        let private jsonNumber =
             fun stream -> parseNumber stream |> Number
 
         let private parseJson (stream: JsonStream) =
@@ -144,9 +151,14 @@ module Parsers =
         do pjson <- parseJson
 
         /// <summary>
-        /// 
+        /// Attempts to parse the contents of a JSON string.
         /// </summary>
-        /// <param name="json"></param>
+        /// <param name="json">The JSON string to parse.</param>
+        /// <returns>The parsed JSON presented as a <see cref="Json"/> AST object.</returns>
+        /// <exception cref="UnexpectedJsonException">
+        /// The <paramref name="json"/> string is malformed and contains a sequence of characters that 
+        /// do not adhere to the expected parsing rules, as defined by the RFC7159 specification.
+        /// </exception>
         let parse json =
             use stream = new JsonStream(new StringReader(json))      
             pjson stream
