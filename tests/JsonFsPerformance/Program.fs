@@ -5,7 +5,7 @@ open JsonFs
 
 let simpleJson = "{\"FirstName\": \"John\", \"LastName\": \"Doe\", \"DOB\": \"21/03/1984\", \"Age\": 032, \"Occupation\": \"Line Manager\"}"
 
-let parseSimpleJsonWithNewtonsoft =
+let parseSimpleJsonWithNewtonsoft() =
     let sw = Stopwatch()
     sw.Start()
 
@@ -15,7 +15,7 @@ let parseSimpleJsonWithNewtonsoft =
     sw.Stop()
     printfn "Parsing 100000 simple documents with Newtonsoft took: %O" sw.Elapsed
 
-let parseSimpleJsonWithJsonFs =
+let parseSimpleJsonWithJsonFs() =
     let sw = Stopwatch()
     sw.Start()
 
@@ -27,4 +27,7 @@ let parseSimpleJsonWithJsonFs =
 
 [<EntryPoint>]
 let main argv = 
+
+    parseSimpleJsonWithNewtonsoft()
+    parseSimpleJsonWithJsonFs()
     0

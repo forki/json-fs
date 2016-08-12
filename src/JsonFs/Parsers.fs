@@ -32,11 +32,13 @@ module Parsers =
         parser : Parser<'t>
 
     let mutable private pjson = createForwardDeclaredParser()
+    
+    (* By declaring these parsers once, memory allocations will be reduced as internal buffers reused *)
+    let private jsonNumber = new JsonNumber()
 
     let private parseNumber (stream: JsonStream) =
         try
-            let number = JsonNumber.FromStream(stream).ToString()
-            decimal number
+            decimal (jsonNumber.Read stream)
         with
         | :? System.FormatException -> raise (UnexpectedJsonException());
 

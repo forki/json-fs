@@ -7,30 +7,32 @@
     /// </summary>
     public sealed class JsonNumber
     {
-        public char[] Buffer { get; }
-        public int BufferSize { get; }
-
-        private JsonNumber(char[] buffer, int bufferSize)
+        public JsonNumber()
         {
-            Buffer = buffer;
-            BufferSize = bufferSize;
+            _buffer = new char[DefaultBufferSize];
         }
 
         /// <summary>
-        /// 
+        /// Attempts to read any numeric character from the <see cref="JsonStream"/> in sequence, until the
+        /// first non-numeric character is encountered.
         /// </summary>
-        /// <param name="stream"></param>
-        /// <returns></returns>
-        public static JsonNumber FromStream(JsonStream stream)
+        /// <param name="stream">The <see cref="JsonStream"/> to read from.</param>
+        /// <returns>
+        /// A string representation of the internal buffer, which contains a number as defined by the JSON 
+        /// <a href="https://tools.ietf.org/html/rfc7159#section-6">RFC7591</a> specification.
+        /// </returns>
+        /// <remarks>
+        /// No form of validation is carried out against the numeric sequence before returning it.
+        /// </remarks>
+        public string Read(JsonStream stream)
         {
-            var buffer = new char[1024];
-            var readPosition = 0;
+            _readPosition = 0;
 
             while (true)
             {
                 if (IsNumber(stream.Peek()))
                 {
-                    buffer[readPosition++] = stream.Read();
+                    _buffer[_readPosition++] = stream.Read();
                 }
                 else
                 {
@@ -38,7 +40,7 @@
                 }
             }
 
-            return new JsonNumber(buffer, readPosition);
+            return new string(_buffer, 0, _readPosition);
         }
 
         private static bool IsNumber(char character)
@@ -67,6 +69,9 @@
             }
         }
 
-        public override string ToString() => new string(Buffer, 0, BufferSize);
+        private readonly char[] _buffer;
+        private int _readPosition;
+
+        private const int DefaultBufferSize = 1024;
     }
 }
