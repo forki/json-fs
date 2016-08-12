@@ -248,24 +248,16 @@ namespace JsonCs
 
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed)
-            {
-                return;
-            }
-
             if (disposing)
             {
                 _textReader.Close();
             }
-
-            _disposed = true;
         }
 
         private readonly TextReader _textReader;
         private char[] _buffer;
         private int _bufferSize;
         private int _readPosition;
-        private bool _disposed;
 
         private const int DefaultBufferSize = 1024;
         public const char NullTerminator = '\0';
