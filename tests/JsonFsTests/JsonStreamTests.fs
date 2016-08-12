@@ -97,6 +97,13 @@ let ``skipping while at the end of the buffer, will always return false``() =
     stream.Skip("d") |> should equal false
 
 [<Fact>]
+let ``skipping while at a null terminator within the buffer, will always return false``() =
+    use stream = jsonStreamWithBufferSize "abc" 4
+
+    stream.Skip("abc") |> should equal true
+    stream.Skip("d") |> should equal false
+
+[<Fact>]
 let ``when skipping over a buffer boundary, if a match fails, the read position should be reset``() =
     use stream = jsonStreamWithBufferSize "abcdef" 3
 
