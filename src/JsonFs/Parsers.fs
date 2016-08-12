@@ -41,7 +41,7 @@ module Parsers =
         try
             decimal (jsonNumber.Read stream)
         with
-        | :? System.FormatException -> raise (UnexpectedJsonException());
+        | _ -> raise (UnexpectedJsonException());
 
     let private parseString (stream: JsonStream) =        
         stream.Expect quotationMark
