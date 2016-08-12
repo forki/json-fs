@@ -35,6 +35,7 @@ module Parsers =
     
     (* By declaring these parsers once, memory allocations will be reduced as internal buffers reused *)
     let private jsonNumber = new JsonNumber()
+    let private jsonString = new JsonString()
 
     let private parseNumber (stream: JsonStream) =
         try
@@ -44,10 +45,10 @@ module Parsers =
 
     let private parseString (stream: JsonStream) =        
         stream.Expect quotationMark
-        let jsonString = JsonString.FromStream(stream).ToString()
+        let value = jsonString.Read stream
         stream.Expect quotationMark
 
-        jsonString
+        value
 
     let private emptyBetween (startChar: char) (endChar: char) (stream: JsonStream) =
         let mutable empty = false

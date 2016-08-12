@@ -9,26 +9,21 @@ namespace JsonCs
     /// </summary>
     public sealed class JsonString
     {
-        public char[] Buffer { get; }
-        public int BufferSize { get; }
-
-        private JsonString(char[] buffer, int bufferSize)
+        public JsonString()
         {
-            Buffer = buffer;
-            BufferSize = bufferSize;
+            _buffer = new char[DefaultBufferSize];
         }
 
         /// <summary>
-        /// Builds a <see cref="JsonString"/> by performing a fast forward only read from the
-        /// given <see cref="JsonStream"/>. Any characters between a set of quotation marks are 
-        /// read into the internal buffer.
+        /// 
         /// </summary>
-        /// <param name="stream">The <see cref="JsonStream"/> to read from.</param>
-        /// <returns>A new instance of a <see cref="JsonString"/>.</returns>
-        public static JsonString FromStream(JsonStream stream)
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        /// <exception cref="UnexpectedJsonException">
+        /// </exception>
+        public string Read(JsonStream stream)
         {
-            var buffer = new char[1024];
-            var readPosition = 0;
+            _readPosition = 0;
 
             while (true)
             {
@@ -75,15 +70,15 @@ namespace JsonCs
                             throw new UnexpectedJsonException();
                     }
 
-                    buffer[readPosition++] = escapedCharacter;
+                    _buffer[_readPosition++] = escapedCharacter;
                 }
                 else
                 {
-                    buffer[readPosition++] = stream.Read();
+                    _buffer[_readPosition++] = stream.Read();
                 }
             }
 
-            return new JsonString(buffer, readPosition);
+            return new string(_buffer, 0, _readPosition);
         }
 
         private static bool EndOfStringReached(char character) => character == '"' || character == JsonStream.NullTerminator;
@@ -102,6 +97,9 @@ namespace JsonCs
             }
         }
 
-        public override string ToString() => new string(Buffer, 0, BufferSize);
+        private readonly char[] _buffer;
+        private int _readPosition;
+
+        private const int DefaultBufferSize = 1024;
     }
 }
