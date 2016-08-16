@@ -15,62 +15,27 @@ namespace JsonCs
         }
 
         /// <summary>
-        /// 
+        /// Attempts to read any string character from the <see cref="JsonStream"/> in sequence, until the
+        /// first end of string character is reached, or the stream is exhausted.
         /// </summary>
-        /// <param name="stream"></param>
-        /// <returns></returns>
+        /// <param name="stream">The <see cref="JsonStream"/> to read from.</param>
+        /// <returns>
+        /// The contents of the internal buffer as a string, as defined by the JSON 
+        /// <a href="https://tools.ietf.org/html/rfc7159#section-8">RFC7591</a> specification.
+        /// </returns>
         /// <exception cref="UnexpectedJsonException">
+        /// The <see cref="JsonStream"/> contains an unexpected unicode escape character and can't
+        /// be read any further. 
         /// </exception>
         public string Read(JsonStream stream)
         {
             _readPosition = 0;
 
-            while (true)
+            while (NotAtEndOfString(stream.Peek()))
             {
-                if (EndOfStringReached(stream.Peek()))
+                if (StartOfEscapeSequence(stream.Peek()))
                 {
-                    break;
-                }
-
-                if (IsEscapedString(stream.Peek()))
-                {
-                    stream.Read();
-                    char escapedCharacter;
-
-                    switch (stream.Read())
-                    {
-                        case '"':
-                            escapedCharacter = '\u0022';
-                            break;
-                        case '\\':
-                            escapedCharacter = '\u005c';
-                            break;
-                        case '/':
-                            escapedCharacter = '\u002f';
-                            break;
-                        case 'b':
-                            escapedCharacter = '\u0008';
-                            break;
-                        case 'f':
-                            escapedCharacter = '\u000c';
-                            break;
-                        case 'n':
-                            escapedCharacter = '\u000a';
-                            break;
-                        case 'r':
-                            escapedCharacter = '\u000d';
-                            break;
-                        case 't':
-                            escapedCharacter = '\u0009';
-                            break;
-                        case 'u':
-                            escapedCharacter = ParseUnicode(stream);
-                            break;
-                        default:
-                            throw new UnexpectedJsonException();
-                    }
-
-                    _buffer[_readPosition++] = escapedCharacter;
+                    _buffer[_readPosition++] = ReadEscapeCharacter(stream);
                 }
                 else
                 {
@@ -81,9 +46,38 @@ namespace JsonCs
             return new string(_buffer, 0, _readPosition);
         }
 
-        private static bool EndOfStringReached(char character) => character == '"' || character == JsonStream.NullTerminator;
+        private static bool NotAtEndOfString(char character) => character != '"' && character != JsonStream.NullTerminator;
 
-        private static bool IsEscapedString(char character) => character == '\\';
+        private static bool StartOfEscapeSequence(char character) => character == EscapeCharacter;
+
+        private static char ReadEscapeCharacter(JsonStream stream)
+        {
+            stream.Expect(EscapeCharacter);
+
+            switch (stream.Read())
+            {
+                case '"':
+                    return '\u0022';
+                case '\\':
+                    return '\u005c';
+                case '/':
+                    return '\u002f';
+                case 'b':
+                    return '\u0008';
+                case 'f':
+                    return '\u000c';
+                case 'n':
+                    return '\u000a';
+                case 'r':
+                    return '\u000d';
+                case 't':
+                    return '\u0009';
+                case 'u':
+                    return ParseUnicode(stream);
+                default:
+                    throw new UnexpectedJsonException();
+            }
+        }
 
         private static char ParseUnicode(JsonStream stream)
         {
@@ -101,5 +95,6 @@ namespace JsonCs
         private int _readPosition;
 
         private const int DefaultBufferSize = 1024;
+        private const char EscapeCharacter = '\\';
     }
 }

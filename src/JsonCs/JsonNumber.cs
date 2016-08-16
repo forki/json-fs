@@ -28,16 +28,9 @@
         {
             _readPosition = 0;
 
-            while (true)
+            while (IsNumber(stream.Peek()))
             {
-                if (IsNumber(stream.Peek()))
-                {
-                    _buffer[_readPosition++] = stream.Read();
-                }
-                else
-                {
-                    break;
-                }
+                _buffer[_readPosition++] = stream.Read();
             }
 
             return new string(_buffer, 0, _readPosition);
