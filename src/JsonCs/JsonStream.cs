@@ -181,6 +181,8 @@ namespace JsonCs
         /// </returns>
         public char Read()
         {
+            // TODO: Identify whether an unchecked and checked read can just be performed here?
+
             if (CanReadFromBuffer())
             {
                 return CheckAndReadCharacterFromBuffer();
@@ -193,9 +195,15 @@ namespace JsonCs
 
         private bool CanReadFromBuffer() => _readPosition < _bufferSize;
 
+        private bool CanReadFromBuffer(int characters) => (_readPosition + characters) < _bufferSize;
+
         private char CheckAndReadCharacterFromBuffer() => AtNullTerminator() ? NullTerminator : _buffer[_readPosition++];
 
-        private bool AtNullTerminator() => _buffer[_readPosition] == NullTerminator;
+        private char ReadOne() => _buffer[_readPosition++];
+
+        private bool AtNullTerminator() => AtNullTerminator(_buffer[_readPosition]);
+
+        private static bool AtNullTerminator(char character) => character == NullTerminator;
 
         /// <summary>
         /// Reads a number of characters from the character stream.
@@ -209,15 +217,12 @@ namespace JsonCs
         /// </remarks>
         public char[] Read(int expectedCharacters)
         {
-            var characters = new char[expectedCharacters];
-
-            for (var i = 0; i < expectedCharacters; i++)
-            {
-                characters[i] = Read();
-            }
-     
-            return characters;
+            return CanReadFromBuffer(expectedCharacters) ? UncheckedRead(expectedCharacters) : CheckedRead(expectedCharacters);
         }
+
+        private char[] UncheckedRead(int read) => Array.Create(read, ReadOne);
+
+        private char[] CheckedRead(int read) => Array.Create(read, Read, AtNullTerminator);
 
         /// <summary>
         /// Check that the next character within the stream is as expected.

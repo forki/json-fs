@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayExtensions.cs" />
     <Compile Include="JsonStream.cs" />
     <Compile Include="JsonNumber.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

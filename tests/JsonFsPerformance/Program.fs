@@ -30,4 +30,6 @@ let main argv =
 
     parseSimpleJsonWithNewtonsoft()
     parseSimpleJsonWithJsonFs()
+    parseSimpleJsonWithNewtonsoft()
+    parseSimpleJsonWithJsonFs()
     0
