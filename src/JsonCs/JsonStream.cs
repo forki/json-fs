@@ -63,14 +63,9 @@ namespace JsonCs
         /// </remarks>
         public bool Skip(char character)
         {
-            if (CanReadFromBuffer() && AtNullTerminator())
+            if (!CanReadFromBuffer())
             {
-                return false;
-            }
-
-            if (EndOfBufferReached())
-            {
-                ExpandBufferAndPreserveContent(1, _readPosition);
+                ExpandBufferAndPreserveContent(1);
             }
 
             if (_buffer[_readPosition] != character)
@@ -84,7 +79,7 @@ namespace JsonCs
 
         /// <summary>
         /// Attempts to skip past a sequence of characters within the character stream.
-        /// The reading position of the stream will only change if a successful match has
+        /// The reading position of the stream will only advance if a successful match has
         /// occurred.
         /// </summary>
         /// <param name="characters">The characters to skip.</param>
@@ -100,47 +95,38 @@ namespace JsonCs
             {
                 return true;
             }
-
-            if (CanReadFromBuffer() && AtNullTerminator())
+            
+            if (!CanReadFromBuffer(characters.Length))
             {
-                return false;
+                ExpandBufferAndPreserveContent(characters.Length);
             }
 
             var previousReadPosition = _readPosition;
 
             foreach (var c in characters)
             {
-                if (EndOfBufferReached())
-                {
-                    var readSoFar = _readPosition - previousReadPosition;
-
-                    ExpandBufferAndPreserveContent(characters.Length, readSoFar);
-                }
-
-                if (_buffer[_readPosition] != c)
+                if (c != ReadOne())
                 {
                     _readPosition = previousReadPosition;
                     return false;
                 }
-
-                _readPosition++;
             }
 
             return true;
         }
 
-        private void ExpandBufferAndPreserveContent(int contentLength, int readSoFar)
+        private void ExpandBufferAndPreserveContent(int contentLength)
         {
             var expandedBufferLength = Math.Max(_bufferSize*2, contentLength);
             var expandedBuffer = new char[expandedBufferLength];
 
-            BlockCopy(_buffer, _readPosition - readSoFar, expandedBuffer, 0, readSoFar);
-            var charactersRead = _textReader.Read(expandedBuffer, _readPosition, expandedBufferLength - _readPosition);
+            BlockCopy(_buffer, _readPosition, expandedBuffer, 0, _bufferSize - _readPosition);
+            var charactersRead = _textReader.Read(expandedBuffer, _bufferSize, expandedBufferLength - _bufferSize);
 
             _buffer = expandedBuffer;
             _bufferSize = expandedBufferLength;
 
-            NullTerminateBufferIfNotAtCapacity(_readPosition + charactersRead);
+            NullTerminateBufferIfNotAtCapacity(_bufferSize + charactersRead);
         }
 
         private static void BlockCopy(char[] source, int sourceOffset, char[] destination, int desintationOffset, int count)
@@ -179,25 +165,28 @@ namespace JsonCs
         /// <returns>
         /// The next character or <see cref="NullTerminator"/> if at the end of the stream.
         /// </returns>
-        public char Read()
-        {
-            // TODO: Identify whether an unchecked and checked read can just be performed here?
-
-            if (CanReadFromBuffer())
-            {
-                return CheckAndReadCharacterFromBuffer();
-            }
-
-            FillBufferAndResetReadPosition();
-
-            return CheckAndReadCharacterFromBuffer();
-        }
+        public char Read() => CheckAndReadCharacterFromBuffer();
 
         private bool CanReadFromBuffer() => _readPosition < _bufferSize;
 
         private bool CanReadFromBuffer(int characters) => (_readPosition + characters) < _bufferSize;
 
-        private char CheckAndReadCharacterFromBuffer() => AtNullTerminator() ? NullTerminator : _buffer[_readPosition++];
+        private char CheckAndReadCharacterFromBuffer()
+        {
+            if (!CanReadFromBuffer() || AtNullTerminator())
+            {
+                return NullTerminator;
+            }
+
+            var readCharacter = ReadOne();
+
+            if (EndOfBufferReached())
+            {
+                FillBufferAndResetReadPosition();
+            }
+
+            return readCharacter;
+        }
 
         private char ReadOne() => _buffer[_readPosition++];
 
@@ -220,9 +209,9 @@ namespace JsonCs
             return CanReadFromBuffer(expectedCharacters) ? UncheckedRead(expectedCharacters) : CheckedRead(expectedCharacters);
         }
 
-        private char[] UncheckedRead(int read) => Array.Create(read, ReadOne);
+        private char[] UncheckedRead(int toRead) => Array.Create(toRead, ReadOne);
 
-        private char[] CheckedRead(int read) => Array.Create(read, Read, AtNullTerminator);
+        private char[] CheckedRead(int toRead) => Array.Create(toRead, Read, AtNullTerminator);
 
         /// <summary>
         /// Check that the next character within the stream is as expected.
@@ -234,9 +223,7 @@ namespace JsonCs
         /// </exception>
         public void Expect(char character)
         {
-            var readCharacter = CheckAndReadCharacterFromBuffer();
-
-            if (character != readCharacter)
+            if (character != Read())
             {
                 throw new UnexpectedJsonException();
             }
