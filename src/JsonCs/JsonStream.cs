@@ -120,21 +120,13 @@ namespace JsonCs
             var expandedBufferLength = Math.Max(_bufferSize*2, contentLength);
             var expandedBuffer = new char[expandedBufferLength];
 
-            BlockCopy(_buffer, _readPosition, expandedBuffer, 0, _bufferSize - _readPosition);
+            Array.BlockCopy(_buffer, _readPosition, expandedBuffer, 0, _bufferSize - _readPosition);
             var charactersRead = _textReader.Read(expandedBuffer, _bufferSize, expandedBufferLength - _bufferSize);
 
             _buffer = expandedBuffer;
             _bufferSize = expandedBufferLength;
 
             NullTerminateBufferIfNotAtCapacity(_bufferSize + charactersRead);
-        }
-
-        private static void BlockCopy(char[] source, int sourceOffset, char[] destination, int desintationOffset, int count)
-        {
-            const int charSizeBytes = 2;
-
-            Buffer.BlockCopy(source, sourceOffset * charSizeBytes, destination, desintationOffset * charSizeBytes, 
-                count * charSizeBytes);
         }
 
         /// <summary>

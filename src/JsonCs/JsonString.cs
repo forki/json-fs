@@ -12,6 +12,7 @@ namespace JsonCs
         public JsonString()
         {
             _buffer = new char[DefaultBufferSize];
+            _bufferSize = DefaultBufferSize;
         }
 
         /// <summary>
@@ -33,6 +34,11 @@ namespace JsonCs
 
             while (NotAtEndOfString(stream.Peek()))
             {
+                if (EndOfBufferReached())
+                {
+                    ExpandBufferAndPreserveContent();
+                }
+
                 if (StartOfEscapeSequence(stream.Peek()))
                 {
                     _buffer[_readPosition++] = ReadEscapeCharacter(stream);
@@ -47,6 +53,19 @@ namespace JsonCs
         }
 
         private static bool NotAtEndOfString(char character) => character != '"' && character != JsonStream.NullTerminator;
+
+        private bool EndOfBufferReached() => _readPosition == _bufferSize;
+
+        private void ExpandBufferAndPreserveContent()
+        {
+            var expandedBufferLength = _bufferSize*2;
+            var expandedBuffer = new char[expandedBufferLength];
+
+            Array.BlockCopy(_buffer, _readPosition, expandedBuffer, 0, _bufferSize - _readPosition);
+
+            _buffer = expandedBuffer;
+            _bufferSize = expandedBufferLength;
+        }
 
         private static bool StartOfEscapeSequence(char character) => character == EscapeCharacter;
 
@@ -91,8 +110,9 @@ namespace JsonCs
             }
         }
 
-        private readonly char[] _buffer;
+        private char[] _buffer;
         private int _readPosition;
+        private int _bufferSize;
 
         private const int DefaultBufferSize = 1024;
         private const char EscapeCharacter = '\\';

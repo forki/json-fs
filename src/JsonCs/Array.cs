@@ -34,5 +34,13 @@ namespace JsonCs
 
             return array;
         }
+
+        public static void BlockCopy(char[] source, int sourceOffset, char[] destination, int desintationOffset, int count)
+        {
+            const int charSizeBytes = 2;
+
+            Buffer.BlockCopy(source, sourceOffset * charSizeBytes, destination, desintationOffset * charSizeBytes,
+                count * charSizeBytes);
+        }
     }
 }
