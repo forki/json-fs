@@ -6,7 +6,7 @@ open JsonCs
 open JsonStreamFactory
 
 [<Fact>]
-let ``reads the stream until the first non number character is encountered``() =
+let ``reads from the stream until the first non number character is encountered``() =
     use stream = jsonStream "1.234567eE+-89xyz"
     let jsonNumber = new JsonNumber()
 

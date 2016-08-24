@@ -8,31 +8,26 @@ open JsonFs
 let ``a empty array is parsed into an empty array``() =
     let result = Json.parse "[]"
 
-    result |> should equal (Json.Array [])
+    result |> should equal (Array [])
 
 [<Fact>]
 let ``an array containing a single type is parsed into an array``() =
     let result = Json.parse "[1, 2, 3]"
 
-    result |> should equal (Json.Array [Json.Number 1M; Json.Number 2M; Json.Number 3M])
+    result |> should equal (Array [Number 1M; Number 2M; Number 3M])
 
 [<Fact>]
 let ``an array containing multiple types is parsed into an array``() =
-    let result = Json.parse "[true, null, 1, \"hello\", {\"a\": \"again\"}]"
+    let result = Json.parse "[true, false, null, 1, \"hello\", {\"a\": \"again\"}]"
 
     let expected =
-        [("a", Json.String "again")] |> Map.ofList
+        [("a", String "again")] |> Map.ofList
 
     result |> should equal 
-        (Json.Array 
-            [Json.Bool true; 
-             Json.Null (); 
-             Json.Number 1M; 
-             Json.String "hello";
-             Json.Object expected])
-
-[<Fact>]
-let ``an array containing a single type is parsed into an array when trailed by whitespace``() =
-    let result = Json.parse "[1, 2, 3]    "
-
-    result |> should equal (Json.Array [Json.Number 1M; Json.Number 2M; Json.Number 3M])
+        (Array 
+            [Bool true;
+             Bool false; 
+             Null (); 
+             Number 1M; 
+             String "hello";
+             Object expected])
