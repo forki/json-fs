@@ -6,32 +6,28 @@ open JsonFs
 open JsonCs
 open System
 
-[<Fact>]
-let ``the literal "true" is correctly parsed into a boolean``() =
-    let result = Json.parse "true"
+let literalValues : obj array seq =
+    seq {
+        yield [| "true"; Bool true |]
+        yield [| "false"; Bool false|]
+        yield [| "null"; Null () |]
+    }
 
-    result |> should equal (Json.Bool true)
+[<Theory>]
+[<MemberData("literalValues")>]
+let ``the literal string is correctly parsed into a JSON ast node``(value: string, expected: Json) =
+    let result = Json.parse value
 
-[<Fact>]
-let ``the literal "false" is correctly parsed into a boolean``() =
-    let result = Json.parse "false"
+    result |> should equal expected
 
-    result |> should equal (Json.Bool false)
+let invalidLiteralValues : obj array seq =
+    seq {
+        yield [| "True" |]
+        yield [| "False" |]
+        yield [| "Null" |]
+    }
 
-[<Fact>]
-let ``the literal "null" is correctly parsed into a unit``() =
-    let result = Json.parse "null"
-
-    result |> should equal (Json.Null ())
-
-[<Fact>]
-let ``the literal "true" must in lowercase to be parsed otherwise an exception is thrown``() =
-    (fun() -> Json.parse "True" |> ignore) |> should throw typeof<UnexpectedJsonException>
-
-[<Fact>]
-let ``the literal "false" must in lowercase to be parsed otherwise an exception is thrown``() =
-    (fun() -> Json.parse "False" |> ignore) |> should throw typeof<UnexpectedJsonException>
-
-[<Fact>]
-let ``the literal "null" must be in lowercase to be parsed otherwise an exception is thrown``() =
-    (fun() -> Json.parse "Null" |> ignore) |> should throw typeof<UnexpectedJsonException>
+[<Theory>]
+[<MemberData("invalidLiteralValues")>]
+let ``the literal string must be in lowercase when parsed otherwise an exception is thrown``(value: string) =
+    (fun() -> Json.parse value |> ignore) |> should throw typeof<UnexpectedJsonException>
