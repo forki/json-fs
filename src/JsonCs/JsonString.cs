@@ -100,14 +100,18 @@ namespace JsonCs
 
         private static char ParseUnicode(JsonStream stream)
         {
+            char unicodeCharacter;
+
             try
             {
-                return (char) int.Parse(new string(stream.Read(4)), NumberStyles.HexNumber);
+                unicodeCharacter = (char) int.Parse(new string(stream.Read(4)), NumberStyles.HexNumber);
             }
             catch
             {
                 throw new UnexpectedJsonException();
             }
+
+            return unicodeCharacter;
         }
 
         private char[] _buffer;
