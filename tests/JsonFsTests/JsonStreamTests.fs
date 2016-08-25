@@ -152,6 +152,18 @@ let ``when reading multiple characters, a padded array is returned if there are 
     stream.Read 4 |> should equal [| 'a'; 'b'; 'c'; '\u0000' |]
 
 [<Fact>]
+let ``reading multiple characters across a stream boundary should advance the stream``() =
+    use stream = jsonStreamWithBufferSize "abc" 2
+    
+    stream.Read 3 |> should equal [| 'a'; 'b'; 'c'; |]
+
+[<Fact>]
+let ``when reading characters across a stream boundary, a padded array is returned if there are not enough characters in the stream``() =
+    use stream = jsonStreamWithBufferSize "abc" 2
+    
+    stream.Read 4 |> should equal [| 'a'; 'b'; 'c'; '\u0000' |]
+
+[<Fact>]
 let ``an UnexpectedJsonException is thrown if an expected character doesn't match``() =
     use stream = jsonStream "a"
     (fun() -> stream.Expect 'b') |> should throw typeof<UnexpectedJsonException>
