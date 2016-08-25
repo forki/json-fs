@@ -61,7 +61,7 @@ namespace JsonCs
             var expandedBufferLength = _bufferSize*2;
             var expandedBuffer = new char[expandedBufferLength];
 
-            Array.BlockCopy(_buffer, _readPosition, expandedBuffer, 0, _bufferSize - _readPosition);
+            Array.BlockCopy(_buffer, 0, expandedBuffer, 0, expandedBufferLength - _readPosition);
 
             _buffer = expandedBuffer;
             _bufferSize = expandedBufferLength;

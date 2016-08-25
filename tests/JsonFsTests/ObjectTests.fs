@@ -53,3 +53,16 @@ let ``a simple object interspersed with whitespace is parsed into a map with the
          ("e", Array [Number 1M])] |> Map.ofList
 
     result |> should equal (Object expected)
+
+[<Fact>]
+let ``an object spread over multiple lines is parsed into a map with the correct keys and values``() =
+    let result = Json.parse @"{ ""a"" : true,
+    ""b"" : null, 
+    ""c"" : ""hello"" }"
+
+    let expected =
+        [("a", Bool true);
+         ("b", Null ());
+         ("c", String "hello")] |> Map.ofList
+
+    result |> should equal (Object expected)
