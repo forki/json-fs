@@ -6,6 +6,12 @@ open JsonCs
 open JsonStreamFactory
 
 [<Fact>]
+let ``reading from an exhausted buffer will always return a null terminator``() =
+    use stream = jsonStreamWithBufferSize "" 0
+    
+    stream.Read() |> should equal '\u0000'
+
+[<Fact>]
 let ``when peeking the next expected character should be returned``() =
     use stream = jsonStream "a"
 
@@ -15,28 +21,28 @@ let ``when peeking the next expected character should be returned``() =
 let ``skipping advances the reader if the character sequence matches``() =
     use stream = jsonStream "abcd"
 
-    stream.Skip("abc") |> should equal true
+    stream.Skip "abc" |> should equal true
     stream.Peek() |> should equal 'd'
 
 [<Fact>]
 let ``skipping will not advance if the character sequence does not match``() =
     use stream = jsonStream "abcd"
 
-    stream.Skip("e") |> should equal false
+    stream.Skip "e" |> should equal false
     stream.Peek() |> should equal 'a'
 
 [<Fact>]
 let ``skipping will not advance if character sequence is null``() =
     use stream = jsonStream "abcd"
 
-    stream.Skip(null) |> should equal true
+    stream.Skip null |> should equal true
     stream.Peek() |> should equal 'a'
 
 [<Fact>]
 let ``skipping will not advance if character sequence is of 0 length``() =
     use stream = jsonStream "abcd"
 
-    stream.Skip("") |> should equal true
+    stream.Skip "" |> should equal true
     stream.Peek() |> should equal 'a'
 
 [<Fact>]
@@ -71,7 +77,7 @@ let ``reading a single character when at the end of the stream will trigger a bu
 let ``while skipping a sequence of characters, if the end of stream is reached, a buffer reload is triggered``() =
     use stream = jsonStreamWithBufferSize "abcd" 3
 
-    stream.Skip("abcd") |> should equal true
+    stream.Skip "abcd" |> should equal true
     stream.Peek() |> should equal '\u0000'
 
 [<Fact>]
@@ -85,7 +91,7 @@ let ``while skipping whitespace, if the end of stream is reached, a buffer reloa
 let ``reading a single character, while at the end of the buffer, will always return the null terminator``() =
     use stream = jsonStreamWithBufferSize "a" 2
 
-    stream.Skip("a") |> ignore
+    stream.Skip "a" |> ignore
     stream.Read() |> should equal '\u0000'
     stream.Read() |> should equal '\u0000'
 
@@ -93,35 +99,35 @@ let ``reading a single character, while at the end of the buffer, will always re
 let ``skipping while at the end of the buffer, will always return false``() =
     use stream = jsonStreamWithBufferSize "abc" 2
 
-    stream.Skip("abc") |> should equal true
-    stream.Skip("d") |> should equal false
+    stream.Skip "abc" |> should equal true
+    stream.Skip "d" |> should equal false
 
 [<Fact>]
 let ``skipping while at a null terminator within the buffer, will always return false``() =
     use stream = jsonStreamWithBufferSize "abc" 4
 
-    stream.Skip("abc") |> should equal true
-    stream.Skip("d") |> should equal false
+    stream.Skip "abc" |> should equal true
+    stream.Skip "d" |> should equal false
 
 [<Fact>]
 let ``when skipping over a buffer boundary, if a match fails, the read position should be reset``() =
     use stream = jsonStreamWithBufferSize "abcdef" 3
 
-    stream.Skip("abcdf") |> should equal false
+    stream.Skip "abcdf" |> should equal false
     stream.Peek() |> should equal 'a'
 
 [<Fact>]
 let ``skipping a single character should advance the stream``() =
     use stream = jsonStreamWithBufferSize "ab" 2
 
-    stream.Skip('a') |> should equal true
+    stream.Skip 'a' |> should equal true
     stream.Peek() |> should equal 'b'
 
 [<Fact>]
 let ``skipping a single character will not advance the stream if the character does not match``() =
     use stream = jsonStreamWithBufferSize "ab" 2
 
-    stream.Skip('b') |> should equal false
+    stream.Skip 'b' |> should equal false
     stream.Peek() |> should equal 'a'
 
 [<Fact>]

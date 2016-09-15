@@ -1,0 +1,57 @@
+﻿{
+  "_id": "57c670217978bd94b4653e57",
+  "index": 0,
+  "guid": "b7290ad0-f2ad-4083-a7e3-0e066dbe4943",
+  "isActive": true,
+  "balance": "$2,148.82",
+  "picture": "http://placehold.it/32x32",
+  "age": 32,
+  "eyeColor": "green",
+  "name": {
+    "first": "Cummings",
+    "last": "Dotson"
+  },
+  "company": "KRAG",
+  "email": "cummings.dotson@krag.us",
+  "phone": "+1 (888) 480-2049",
+  "address": "782 Matthews Court, Boling, New Hampshire, 8038",
+  "about": "Elit ut magna excepteur consectetur anim Lorem et enim sunt pariatur id reprehenderit eu ea. Sit dolore minim mollit sit esse non laboris occaecat officia duis amet cillum adipisicing. Esse dolore veniam qui reprehenderit minim. Cillum commodo esse cillum voluptate dolor non culpa qui cillum fugiat enim. Dolore sunt excepteur pariatur dolore sit cupidatat deserunt dolore reprehenderit amet.\n\nNisi eiusmod reprehenderit mollit veniam eiusmod et velit mollit sint voluptate. Commodo anim nulla exercitation ad elit id est dolor consectetur. Aliqua aliquip minim labore quis esse mollit minim id sunt et.\n\nConsequat esse irure do do sunt est excepteur cupidatat quis magna labore enim. Cillum voluptate in proident occaecat ea fugiat minim nulla sit occaecat ullamco. Eiusmod sit incididunt ea est commodo laborum minim proident deserunt.\n\nEiusmod ea aliqua ex officia sit nisi aliqua cillum qui ex sint voluptate Lorem. Quis duis eiusmod culpa nisi adipisicing in. Culpa id Lorem anim velit excepteur voluptate. Ipsum qui nulla consequat sint fugiat adipisicing occaecat qui ex aliqua esse nostrud. Exercitation nisi tempor occaecat labore officia.\n\nDolor non ullamco in quis in. Irure veniam incididunt consectetur velit occaecat enim in elit anim duis ad officia. Ad nostrud magna anim consequat esse in cillum occaecat duis exercitation dolor. Sint veniam ipsum velit velit mollit duis aliqua Lorem Lorem sit.",
+  "registered": "Saturday, October 11, 2014 3:14 PM",
+  "latitude": "0.310667",
+  "longitude": "-148.190846",
+  "tags": [
+    "nisi",
+    "ut",
+    "minim",
+    "Lorem",
+    "est"
+  ],
+  "range": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "friends": [
+    {
+      "id": 0,
+      "name": "Henderson Hartman"
+    },
+    {
+      "id": 1,
+      "name": "Glover Peck"
+    },
+    {
+      "id": 2,
+      "name": "Montgomery Jenkins"
+    }
+  ],
+  "greeting": "Hello, Cummings! You have 7 unread messages.",
+  "favoriteFruit": "banana"
+}

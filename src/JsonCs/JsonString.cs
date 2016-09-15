@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 
 namespace JsonCs
 {
@@ -104,7 +105,7 @@ namespace JsonCs
 
             try
             {
-                unicodeCharacter = (char) int.Parse(new string(stream.Read(4)), NumberStyles.HexNumber);
+                unicodeCharacter = Convert.ToChar(int.Parse(new string(stream.Read(4)), NumberStyles.HexNumber));
             }
             catch
             {

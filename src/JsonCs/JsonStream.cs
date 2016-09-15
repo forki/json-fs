@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace JsonCs
 {
@@ -63,7 +64,7 @@ namespace JsonCs
         /// </remarks>
         public bool Skip(char character)
         {
-            if (!CanReadFromBuffer())
+            if (EndOfBufferReached())
             {
                 ExpandBufferAndPreserveContent(1);
             }
@@ -103,16 +104,13 @@ namespace JsonCs
 
             var previousReadPosition = _readPosition;
 
-            foreach (var c in characters)
+            if (characters.All(c => c == ReadOne()))
             {
-                if (c != ReadOne())
-                {
-                    _readPosition = previousReadPosition;
-                    return false;
-                }
+                return true;
             }
 
-            return true;
+            _readPosition = previousReadPosition;
+            return false;
         }
 
         private void ExpandBufferAndPreserveContent(int contentLength)
@@ -159,13 +157,11 @@ namespace JsonCs
         /// </returns>
         public char Read() => CheckAndReadCharacterFromBuffer();
 
-        private bool CanReadFromBuffer() => _readPosition < _bufferSize;
-
         private bool CanReadFromBuffer(int characters) => (_readPosition + characters) < _bufferSize;
 
         private char CheckAndReadCharacterFromBuffer()
         {
-            if (!CanReadFromBuffer() || AtNullTerminator())
+            if (IsBufferEmpty())
             {
                 return NullTerminator;
             }
@@ -185,6 +181,8 @@ namespace JsonCs
         private bool AtNullTerminator() => AtNullTerminator(_buffer[_readPosition]);
 
         private static bool AtNullTerminator(char character) => character == NullTerminator;
+
+        private bool IsBufferEmpty() => _readPosition >= _bufferSize || AtNullTerminator();
 
         /// <summary>
         /// Reads a number of characters from the character stream.
