@@ -1,79 +1,15 @@
 ﻿open System
-open System.IO
-open System.Diagnostics
-open System.Text
-open Newtonsoft.Json
-open Newtonsoft.Json.Linq
-open JsonFs
-
-type ParsingStatistics =
-    {
-        Iterations : int
-        File : string
-        SizeInBytes : int
-        SizeInKilobytes : int
-        Duration : TimeSpan
-        Average : TimeSpan
-        Parser : string option
-    }
-    override this.ToString() =
-        let parserAsString = function
-        | Some name -> name
-        | None -> "Not Defined"
-
-        sprintf "|%-15s|%-15s|%12i|%10i|%10i|%16O|%16O|" 
-            (parserAsString this.Parser) this.File this.SizeInBytes this.SizeInKilobytes this.Iterations this.Duration this.Average
-
-type Parser = string -> unit
-
-let fileAsString =
-    fun file -> File.ReadAllText file
-
-let parseJson file (parser: Parser) iterations =
-    let json = fileAsString file
-    let sizeInBytes = Encoding.UTF8.GetByteCount json
-
-    let sw = Stopwatch()
-    sw.Start()
-
-    for i = 1 to iterations do
-        parser json
-
-    sw.Stop()
-
-    {
-        Iterations = iterations; 
-        File = file;
-        SizeInBytes = sizeInBytes;
-        SizeInKilobytes = sizeInBytes / 1024;
-        Duration = sw.Elapsed;
-        Average = TimeSpan.FromTicks(sw.ElapsedTicks / (int64 iterations));
-        Parser = None
-    }
-
-let jsonFsParser =
-    fun json -> Json.parse json |> ignore
-
-let newtonsoftParser =
-    fun json -> JObject.Parse(json) |> ignore
-
-let parseWithNewtonsoft file iterations =
-    let statistic = parseJson file newtonsoftParser iterations
-
-    {statistic with Parser = Some("Newtonsoft.Json")}
-
-let parseWithJsonFs file iterations =
-    let statistic = parseJson file jsonFsParser iterations
-
-    {statistic with Parser = Some("JsonFs")}
 
 let parseFileAndCollectStatistics file iterations =
     printfn " * %s" file
 
-    let newtonsoftStatistic = parseWithNewtonsoft file iterations
-    let jsonFsStatistic = parseWithJsonFs file iterations
+    let newtonsoftStatistic = Newtonsoft.parseJson file iterations
+    let chironStatistic = Chiron.parseJson file iterations
+    let jsonFsStatistic = JsonFs.parseJson file iterations
     
-    (newtonsoftStatistic, jsonFsStatistic)
+    // TODO: convert this to list
+
+    (newtonsoftStatistic, chironStatistic, jsonFsStatistic)
 
 let collectParsingStatistics files =
     printfn "Parsing input files:"
@@ -86,14 +22,16 @@ let collectParsingStatistics files =
 
 let printStatisticsHeader() =
     printfn ""
-    printfn "|%-15s|%-15s|%-12s|%-10s|%-10s|%-16s|%-16s|" 
-        "Parser" "File" "Json (Bytes)" "Json (KBs)" "Iterations" "Total Time" "Average Time" 
+    printfn "|%-15s|%-12s|%-10s|%-16s|%-16s|" 
+        "Parser" "Bytes" "Iterations" "Total Time" "Average Time" 
 
 let printStatistics statistics =
     printStatisticsHeader()
 
+    // TODO: convert this to list
+
     let printStatistic = function
-        | (a: ParsingStatistics, b: ParsingStatistics) -> printfn "%O\r\n%O" a b
+        | (a: ParsingStatistics, b: ParsingStatistics, c: ParsingStatistics) -> printfn "%O\r\n%O\r\n%O" a b c
 
     statistics |> List.iter printStatistic
     printfn ""

@@ -16,3 +16,4 @@ group PerformanceTest
 source https://nuget.org/api/v2
 
 nuget Newtonsoft.Json
+nuget Chiron
