@@ -3,20 +3,18 @@
 let parseFileAndCollectStatistics file iterations =
     printfn " * %s" file
 
-    let newtonsoftStatistic = Newtonsoft.parseJson file iterations
     let chironStatistic = Chiron.parseJson file iterations
+    let newtonsoftStatistic = Newtonsoft.parseJson file iterations
     let jsonFsStatistic = JsonFs.parseJson file iterations
     
-    // TODO: convert this to list
-
-    (newtonsoftStatistic, chironStatistic, jsonFsStatistic)
+    [chironStatistic; newtonsoftStatistic; jsonFsStatistic]
 
 let collectParsingStatistics files =
     printfn "Parsing input files:"
 
     let rec parseJsonFile collectedStats = function
-        | [] -> List.rev collectedStats
-        | x::xs -> parseJsonFile ((parseFileAndCollectStatistics x 100000)::collectedStats) xs
+        | [] -> collectedStats
+        | x::xs -> parseJsonFile (List.append (parseFileAndCollectStatistics x 100000) collectedStats) xs
 
     parseJsonFile [] files
 
@@ -28,17 +26,13 @@ let printStatisticsHeader() =
 let printStatistics statistics =
     printStatisticsHeader()
 
-    // TODO: convert this to list
-
-    let printStatistic = function
-        | (a: ParsingStatistics, b: ParsingStatistics, c: ParsingStatistics) -> printfn "%O\r\n%O\r\n%O" a b c
+    let printStatistic =
+        fun statistic -> printfn "%O" statistic
 
     statistics |> List.iter printStatistic
     printfn ""
 
 [<EntryPoint>]
 let main argv = 
-    // TODO: Generate better json samples
-
-    [1..3] |> List.iter (fun i -> collectParsingStatistics ["small.json"; "medium.json"] |> printStatistics)
+    [1..3] |> List.iter (fun i -> collectParsingStatistics ["small.json"; "medium.json"; "large.json"] |> printStatistics)
     0
