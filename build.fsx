@@ -18,7 +18,7 @@ let keysDirectory = "./keys"
 let binDirectory = "./bin"
 
 // Project files for building and testing
-let sourceSets = !! "src/**/*.fsproj"
+let sourceSets = !! "src/**/*.fsproj" ++ "src/**/*.csproj"
 let testSets = !! "tests/**/*.fsproj"
 
 // Due to PRs not supporting secure variables in AppVeyor, some steps need to be skipped
@@ -97,16 +97,23 @@ Target "PatchAssemblyInfo" (fun _ ->
 
     let getProjectDetails projectPath =
         let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
+        let projectDirectory = System.IO.Path.GetDirectoryName(projectPath)
+
         ( projectPath,
           projectName,
-          System.IO.Path.GetDirectoryName(projectPath),
+          projectDirectory,
+          System.IO.File.Exists(projectDirectory @@ "AssemblyInfo.fs"),
           (getAssemblyInfoAttributes projectName)
         )
 
+    // TODO: check if projFileName and projectName are even used... else remove
+
     sourceSets
     |> Seq.map getProjectDetails
-    |> Seq.iter (fun (projFileName, projectName, folderName, attributes) ->
-        CreateFSharpAssemblyInfo (folderName @@ "AssemblyInfo.fs") attributes)
+    |> Seq.iter (fun (projFileName, projectName, folderName, isFSharpProject, attributes) ->
+        match isFSharpProject with
+        | true -> CreateFSharpAssemblyInfo (folderName @@ "AssemblyInfo.fs") attributes
+        | false -> CreateCSharpAssemblyInfo (folderName @@ "Properties/AssemblyInfo.cs") attributes)
 )
 
 Target "Build" (fun _ ->
@@ -139,8 +146,8 @@ Target "RunUnitTests" (fun _ ->
             TestRunnerExePath = "./packages/build/xunit.runner.console/tools/xunit.console.exe"
             Output = codeCoverageReport
             Register = RegisterType.RegisterUser
-            OptionalArguments = "-excludebyfile:*\*AssemblyInfo.fs -hideskipped:File"
-            Filter = "+[JsonFs*]* -[*Tests]*"
+            OptionalArguments = "-excludebyfile:*\*AssemblyInfo.fs;*\*AssemblyInfo.cs;*\*Ast.fs -hideskipped:File"
+            Filter = "+[JsonFs*]* +[JsonCs*]* -[*Tests]* -[*Performance]*"
         })
         (assembliesToTest + " -appveyor -noshadow")
 )

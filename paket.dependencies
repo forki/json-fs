@@ -1,7 +1,3 @@
-source https://nuget.org/api/v2
-
-nuget FParsec
-
 group Build
 source https://nuget.org/api/v2
 
@@ -15,3 +11,9 @@ group Test
 source https://nuget.org/api/v2
 
 nuget FsUnit.xUnit
+
+group PerformanceTest
+source https://nuget.org/api/v2
+
+nuget Newtonsoft.Json
+nuget Chiron

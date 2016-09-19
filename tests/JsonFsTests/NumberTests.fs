@@ -3,72 +3,44 @@
 open Xunit
 open FsUnit.Xunit
 open JsonFs
+open JsonCs
 open System
 
-[<Fact>]
-let ``the numeric string "0" is parsed into a decimal value of 0``() =
-    let result = Json.parse "0"
+let numberValues : obj array seq =
+    seq {
+        yield [| "0"; Number 0M |]
+        yield [| "01"; Number 1M |]
+        yield [| "123456789"; Number 123456789M |]
+        yield [| "-1"; Number -1M |]
+        yield [| "+1"; Number 1M |]
+        yield [| "-0"; Number 0M |]
+        yield [| "3.14519"; Number 3.14519M |]
+        yield [| "3."; Number 3M |]
+        yield [| ".321"; Number 0.321M |]
+        yield [| "1.2345E-02"; Number 1.2345E-02M |]
+        yield [| "1.2345e+02"; Number 1.2345e+02M |]
+        yield [| "1.2345e02"; Number 1.2345e02M |]
+        yield [| "123e02M"; Number 123e02M |]
+    }
 
-    result |> should equal (Json.Number 0M)
+[<Theory>]
+[<MemberData("numberValues")>]
+let ``the numeric string is correctly parsed into a JSON ast node``(value: string, expected: Json) =
+    let result = Json.parse value
 
-[<Fact>]
-let ``the numeric string "01" is parsed into a decimal value of 0``() =
-    let result = Json.parse "01"
+    result |> should equal expected
 
-    result |> should equal (Json.Number 0M)
+let invalidNumberValues : obj array seq =
+    seq {
+        yield [| "1.2345e" |]
+        yield [| "1.2345E+" |]
+        yield [| "1..0" |]
+        yield [| "1.2345+e02" |]
+        yield [| "1.2345-E02" |]
+        yield [| "+-1" |]
+    }
 
-[<Fact>]
-let ``the numeric string "123456789" is parsed into a decimal value of 123456789``() =
-    let result = Json.parse "123456789"
-
-    result |> should equal (Json.Number 123456789M)
-
-[<Fact>]
-let ``the numeric string "-1" is parsed into a decimal value of -1``() =
-    let result = Json.parse "-1"
-
-    result |> should equal (Json.Number -1M)
-
-[<Fact>]
-let ``the numeric string "-0" is parsed into a decimal value of 0``() =
-    let result = Json.parse "-0"
-
-    result |> should equal (Json.Number 0M)
-
-[<Fact>]
-let ``the numeric string "3.14159" is parsed into a decimal value of 3.14159``() =
-    let result = Json.parse "3.14159"
-
-    result |> should equal (Json.Number 3.14159M)
-
-[<Fact>]
-let ``the numeric string "3." is parsed into a decimal value of 3``() =
-    let result = Json.parse "3."
-
-    result |> should equal (Json.Number 3M)
-
-[<Fact>]
-let ``the numeric string "1.2345E-02" is parsed into a decimal value of 1.2345E-02``() =
-    let result = Json.parse "1.2345E-02"
-
-    result |> should equal (Json.Number 1.2345E-02M)
-
-[<Fact>]
-let ``the numeric string "1.2345e+02" is parsed into a decimal value of 1.2345e+02``() =
-    let result = Json.parse "1.2345e+02"
-
-    result |> should equal (Json.Number 1.2345e+02M)
-
-[<Fact>]
-let ``the numeric string "1.2345e02" is parsed into a decimal value of 1.2345e02``() =
-    let result = Json.parse "1.2345e02"
-
-    result |> should equal (Json.Number 1.2345e02M)
-
-[<Fact>]
-let ``the numeric string "1.2345e" contains an invalid exponent and an exception is thrown``() =
-    (fun() -> Json.parse "1.2345e" |> ignore) |> should throw typeof<Exception>
-
-[<Fact>]
-let ``the numeric string "1.2345E+" contains an invalid exponent and an exception is thrown``() =
-    (fun() -> Json.parse "1.2345E+" |> ignore) |> should throw typeof<Exception>
+[<Theory>]
+[<MemberData("invalidNumberValues")>]
+let ``the numeric string must be parsed into a valid number otherwise an exception is thrown``(value: string) =
+    (fun() -> Json.parse value |> ignore) |> should throw typeof<UnexpectedJsonException>

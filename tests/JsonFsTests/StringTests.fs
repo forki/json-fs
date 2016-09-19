@@ -3,82 +3,50 @@
 open Xunit
 open FsUnit.Xunit
 open JsonFs
+open JsonCs
+
+let wrap =
+    fun str -> sprintf "\"%s\"" str
+
+let escapedValues : obj array seq =
+    seq {
+        yield [| @"\"""; String "\u0022" |]
+        yield [| @"\\"; String "\u005c" |]
+        yield [| @"\/"; String "\u002f" |]
+        yield [| @"\b"; String "\u0008" |]
+        yield [| @"\f"; String "\u000c" |]
+        yield [| @"\n"; String "\u000a" |]
+        yield [| @"\r"; String "\u000d" |]
+        yield [| @"\t"; String "\u0009" |]
+        yield [| "\u0aE0"; String "ૠ" |]
+    }
+
+[<Theory>]
+[<MemberData("escapedValues")>]
+let ``an escaped string is correctly parsed into its unicode representation``(value: string, expected: Json) =
+    let result = Json.parse (wrap value)
+
+    result |> should equal expected
+
+let invalidEscapedValues : obj array seq =
+    seq {
+        yield [| "abc\d" |]
+        yield [| "\ua00z" |]
+    }
+
+[<Theory>]
+[<MemberData("invalidEscapedValues")>]
+let ``an unrecognised escape sequence when parsed will throw an exception``(value: string) =
+    (fun() -> Json.parse (wrap value) |> ignore) |> should throw typeof<UnexpectedJsonException>
 
 [<Fact>]
-let ``a string containing a '"' (quotation mark) is escaped as unicode \u0022``() =
-    let result = Json.parse "\"\\\"\""
-
-    result |> should equal (Json.String "\u0022")
-
-[<Fact>]
-let ``a string containing a '\' (reverse solidus) is escaped as unicode \u005c``() =
-    let result = Json.parse "\"\\\\\""
-
-    result |> should equal (Json.String "\u005c")
+let ``a string containing the full range of ASCII characters is parsed without escaping``() =
+    let result = Json.parse "\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~ !\""
+    
+    result |> should equal (Json.String "#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~ !")
 
 [<Fact>]
-let ``a string containing a '/' (solidus) is escaped as unicode \u002f``() =
-    let result = Json.parse "\"\\/\""
-
-    result |> should equal (Json.String "\u002f")
-
-[<Fact>]
-let ``a string containing a '\b' (backspace) is escaped as unicode \u0008``() =
-    let result = Json.parse "\"\\b\""
-
-    result |> should equal (Json.String "\u0008")
-
-[<Fact>]
-let ``a string containing a '\f' (form feed) is escaped as unicode \u000c``() =
-    let result = Json.parse "\"\\f\""
-
-    result |> should equal (Json.String "\u000c")
-
-[<Fact>]
-let ``a string containing a '\n' (line feed) is escaped as unicode \u000a``() =
-    let result = Json.parse "\"\\n\""
-
-    result |> should equal (Json.String "\u000a")
-
-[<Fact>]
-let ``a string containing a '\r' (carriage return) is escaped as unicode \u000d``() =
-    let result = Json.parse "\"\\r\""
-
-    result |> should equal (Json.String "\u000d")
-
-[<Fact>]
-let ``a string containing a '\t' (tab) is escaped as unicode \u0009``() =
-    let result = Json.parse "\"\\t\""
-
-    result |> should equal (Json.String "\u0009")
-
-[<Fact>]
-let ``a string containing unicode sequence '\u0aE0' (with mixed case) is parsed as character 'ૠ'``()=
-    let result = Json.parse "\"\\u0aE0\""
-
-    result |> should equal (Json.String "ૠ")
-
-[<Fact>]
-let ``a string containing a single space is parsed without escaping``()=
-    let result = Json.parse "\" \""
-
-    result |> should equal (Json.String " ")
-
-[<Fact>]
-let ``a string containing a single exclamation mark is parsed without escaping``()=
-    let result = Json.parse "\"!\""
-
-    result |> should equal (Json.String "!")
-
-[<Fact>]
-let ``a string containing a full range of supported ASCII characters is parsed without escaping``()=
-    let result = Json.parse "\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\""
-
-    result |> should equal (Json.String "#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~")
-
-[<Fact>]
-let ``a string containing characters upto the end of the basic multilingual plane are parsed without escaping``()=
+let ``a string containing characters upto the end of the basic multilingual plane are parsed without escaping``() =
     let result = Json.parse "\"གྷᡵヶ⢇𐿿\""
 
     result |> should equal (Json.String "གྷᡵヶ⢇𐿿")
-

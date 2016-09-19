@@ -8,21 +8,9 @@ open System.Runtime.InteropServices
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [<assembly: AssemblyTitle("JsonFsTests")>]
-[<assembly: AssemblyDescription("")>]
-[<assembly: AssemblyConfiguration("")>]
-[<assembly: AssemblyCompany("")>]
+[<assembly: AssemblyCompany("Coda Solutions Ltd")>]
 [<assembly: AssemblyProduct("JsonFsTests")>]
-[<assembly: AssemblyCopyright("Copyright ©  2016")>]
-[<assembly: AssemblyTrademark("")>]
-[<assembly: AssemblyCulture("")>]
-
-// Setting ComVisible to false makes the types in this assembly not visible 
-// to COM components.  If you need to access a type in this assembly from 
-// COM, set the ComVisible attribute to true on that type.
-[<assembly: ComVisible(false)>]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-[<assembly: Guid("51f3219e-f990-4e04-8a90-98e2d0b7c772")>]
+[<assembly: AssemblyCopyright("Copyright © 2016")>]
 
 // Version information for an assembly consists of the following four values:
 // 

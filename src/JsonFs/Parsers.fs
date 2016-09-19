@@ -1,247 +1,167 @@
 ﻿namespace JsonFs
 
-type Json = 
-    | Bool of bool
-    | Null of unit
-    | Number of decimal
-    | String of string
-    | Array of Json list
-    | Object of Map<string, Json>
-
 [<AutoOpen>]
 module Parsers =
-    open FParsec
+    open JsonCs
 
-    (* Grammar 
-
-       For detailed information, please read RFC 7159, section 2
-           See [https://tools.ietf.org/html/rfc7159#section-2] *)
-
-    [<Literal>]
-    let private space = 0x20
-    [<Literal>]
-    let private horizontalTab = 0x09
-    [<Literal>]
-    let private lineFeed = 0x0A
-    [<Literal>]
-    let private carriageReturn = 0x0D
-
-    let private whitespace char = 
-        char = space || char = horizontalTab || char = lineFeed || char = carriageReturn
-
-    let private pwhitespace =
-        skipManySatisfy (int >> whitespace)
-
-    (* Values 
-
-       For detailed information, please read RFC 7159, section 3
-           See [https://tools.ietf.org/html/rfc7159#section-3] *)
-
-    let private pboolean =
-        stringReturn "true" true <|> stringReturn "false" false .>> pwhitespace
-
-    let private pnull =
-        stringReturn "null" () .>> pwhitespace
-
-    (* Numbers 
-
-       For detailed information, please read RFC 7159, section 6
-           See [https://tools.ietf.org/html/rfc7159#section-6] *)
+    (* JSON grammar as defined within the RFC7159 specification
+       
+       See: https://tools.ietf.org/html/rfc7159#section-2 for more details *)
 
     [<Literal>]
-    let private zero = 0x30
+    let private beginArray = '['
     [<Literal>]
-    let private one = 0x31
+    let private endArray = ']'
     [<Literal>]
-    let private nine = 0x39
-
-    let private digit1to9 i = 
-        i >= one && i <= nine
-
-    let private digit i =
-        digit1to9 i || i = zero
-
-    let private pzero =
-        charReturn '0' "0"
-
-    let pminus =
-        charReturn '-' "-"
-
-    let pplus =
-        charReturn '+' "+"
-
-    let pdecimal =
-        charReturn '.' "."
-
+    let private beginObject = '{'
     [<Literal>]
-    let private e = 0x65
+    let private endObject = '}'
     [<Literal>]
-    let private E = 0x45
+    let private valueSeparator = ','
+    [<Literal>]
+    let private nameSeparator = ':'
+    [<Literal>]
+    let private quotationMark = '"'
 
-    let private exponent i =
-        i = e || i = E
-
-    let private pint =
-        pzero <|> (satisfy (int >> digit1to9) .>>. manySatisfy (int >> digit) 
-            |>> fun (first, n) -> string first + n)
-
-    let private (|??) =
-        function
-            | Some option -> option
-            | _ -> ""
-
-    let private pfraction =
-        pdecimal .>>. manySatisfy (int >> digit) 
-            |>> fun (decimal, i) -> decimal + i
-
-    let private pexponent =
-        pipe3 (satisfy (int >> exponent)) (opt (pminus <|> pplus)) (many1Satisfy (int >> digit))
-            (fun exponent sign i -> string exponent + (|??) sign + i)
-
-    let private pnumber =
-        pipe4 (opt pminus) pint (opt pfraction) (opt pexponent)
-            (fun sign i fraction exp -> decimal((|??) sign + i + (|??) fraction + (|??) exp))
-
-    (* Strings 
-
-       For detailed information, please read RFC 7159, section 7
-           See [https://tools.ietf.org/html/rfc7159#section-7] *)
-
-    [<RequireQualifiedAccess>]
-    module private Escaping =
-        open System
-        open System.Globalization
-
-        // The hexadecimal values are entries within the ASCII and UNICODE lookup tables
-        [<Literal>]
-        let private asciiSpace = 0x20
-        [<Literal>]
-        let private asciiExclamationMark = 0x21
-        [<Literal>]
-        let private asciiHash = 0x23
-        [<Literal>]
-        let private asciiLeftSquareBracket = 0x5b
-        [<Literal>]
-        let private asciiRightSquareBracket = 0x5d
-        [<Literal>]
-        let private unicodeSpecialBlockEnd = 0x10ffff
-
-        let private unescaped c =
-            c = asciiSpace || 
-            c = asciiExclamationMark ||
-            c >= asciiHash && c <= asciiLeftSquareBracket ||
-            c >= asciiRightSquareBracket && c <= unicodeSpecialBlockEnd
-
-        let private punescaped =
-            satisfy (int >> unescaped)
-
-        (* An escaped character can be represented by either uppercase or lowercase hexadecimal values *)
-
-        [<Literal>]
-        let private uppercaseA = 0x41
-        [<Literal>]
-        let private uppercaseF = 0x46
-        [<Literal>]
-        let private lowercaseA = 0x61
-        [<Literal>]
-        let private lowercaseF = 0x66
-
-        let private hexdig i =
-            (digit i)
-            || (i >= uppercaseA && i <= uppercaseF)
-            || (i >= lowercaseA && i <= lowercaseF) 
-
-        let private p4hexdig =
-            manyMinMaxSatisfy 4 4 (int >> hexdig)
-                |>> fun str -> char (Int32.Parse(str, NumberStyles.HexNumber))
-
-        let private pescaped =
-            skipChar '\\' >>.
-                choice [
-                    skipChar '"'  >>% '\u0022'
-                    skipChar '\\' >>% '\u005c'
-                    skipChar '/'  >>% '\u002f'
-                    skipChar 'b'  >>% '\u0008'
-                    skipChar 'f'  >>% '\u000c'
-                    skipChar 'n'  >>% '\u000a'
-                    skipChar 'r'  >>% '\u000d'
-                    skipChar 't'  >>% '\u0009'
-                    skipChar 'u'  >>. p4hexdig ]
-
-        let pchar =
-            choice [ 
-                punescaped 
-                pescaped ]
-
-        let parse =
-            many pchar
- 
-    let private pquotationMark =
-        skipChar '"'
-
-    let private pescapedString =
-        between pquotationMark pquotationMark Escaping.parse 
-            |>> fun chars -> new string (List.toArray chars)
-
-    (* As defined in the FParsec documentation, any recursive parsing needs
-       to be forward declared. This will allow parsing of nested JSON elements *)
+    (* By forward declaring the parser, dependency ordering within the module disappears  *)
     
-    let internal pjson, pjsonRef = createParserForwardedToRef()
+    type private Parser<'t> = JsonStream -> 't
 
-    (* Arrays 
+    let createForwardDeclaredParser() =
+        let parser = fun stream -> failwith "the parser has not yet been initialised"
+        parser : Parser<'t>
 
-       For detailed information, please read RFC 7159, section 5
-           See [https://tools.ietf.org/html/rfc7159#section-5] *)
-
-    let private pbeginArray =
-        skipChar '[' .>> pwhitespace
-
-    let private pendArray =
-        skipChar ']' .>> pwhitespace
-
-    let private pvalueSeperator =
-        skipChar ',' .>> pwhitespace
-
-    let private parray =
-        between pbeginArray pendArray (sepBy pjson pvalueSeperator)
-
-    (* Objects 
-
-       For detailed information, please read RFC 7159, section 4
-           See [https://tools.ietf.org/html/rfc7159#section-4] *)
-
-    let private pbeginObject =
-        skipChar '{' .>> pwhitespace
-
-    let private pendObject =
-        skipChar '}' .>> pwhitespace
-
-    let private pmemberSeperator =
-        skipChar ':' .>> pwhitespace
-
-    let private pmember =
-        pescapedString .>> pmemberSeperator .>>. pjson
-
-    let private pobject =
-        between pbeginObject pendObject (sepBy pmember pvalueSeperator) |>> Map.ofList
-
-    (* Wire the parser to the JSON AST *)
-
-    do pjsonRef := choice [ 
-                pboolean        |>> Json.Bool
-                pnull           |>> Json.Null
-                pnumber         |>> Json.Number
-                pescapedString  |>> Json.String
-                parray          |>> Json.Array
-                pobject         |>> Json.Object
-            ]
+    let mutable private pjson = createForwardDeclaredParser()
     
+    (* By declaring these parsers once, memory allocations will be reduced as internal buffers reused *)
+    let private jsonNumber = new JsonNumber()
+    let private jsonString = new JsonString()
+
+    let private parseNumber (stream: JsonStream) =
+        try
+            decimal (jsonNumber.Read stream)
+        with
+        | _ -> raise (UnexpectedJsonException());
+
+    let private parseString (stream: JsonStream) =        
+        stream.Expect quotationMark
+        let value = jsonString.Read stream
+        stream.Expect quotationMark
+
+        value
+
+    let private emptyBetween (startChar: char) (endChar: char) (stream: JsonStream) =
+        let mutable empty = false
+        
+        stream.Skip startChar |> ignore
+        stream.SkipWhitespace()
+
+        if stream.Skip endChar then
+            empty <- true
+
+        empty
+
+    let private emptyArray =
+        fun stream -> emptyBetween beginArray endArray stream
+
+    let private emptyObject =
+        fun stream -> emptyBetween beginObject endObject stream
+        
+    let private parseArrayElement (stream: JsonStream) =
+        stream.SkipWhitespace()
+        let arrayElement = pjson stream
+        stream.SkipWhitespace()
+
+        arrayElement
+
+    let private firstArrayElement =
+        fun stream -> [parseArrayElement stream]
+
+    let private appendArrayElement =
+        fun stream array -> (parseArrayElement stream)::array
+
+    let private parseObjectElement (stream: JsonStream) =
+        stream.SkipWhitespace()
+        let property = parseString stream
+            
+        stream.SkipWhitespace()
+        stream.Expect nameSeparator
+        stream.SkipWhitespace()
+
+        let value = pjson stream
+        stream.SkipWhitespace()
+
+        (property, value)
+
+    let private firstObjectElement =
+        fun stream -> [parseObjectElement stream]
+
+    let private appendObjectElement =
+        fun stream array -> (parseObjectElement stream)::array
+
+    let private parseArray (stream: JsonStream) =
+        let mutable jsonArray = []
+
+        if not (emptyArray stream) then
+            jsonArray <- firstArrayElement stream
+
+            while stream.Skip valueSeparator do
+                jsonArray <- appendArrayElement stream jsonArray
+
+            stream.Expect endArray
+
+        List.rev jsonArray
+
+    let private parseObject (stream: JsonStream) =
+        let mutable jsonObject = []
+
+        if not (emptyObject stream) then
+            jsonObject <- firstObjectElement stream
+
+            while stream.Skip valueSeparator do
+                jsonObject <- appendObjectElement stream jsonObject
+
+            stream.Expect endObject
+            
+        Map.ofList (List.rev jsonObject)
+
     [<RequireQualifiedAccess>]
     module Json =
+        open System.IO
 
-        (* Utility functions for parsing JSON in its textual form *)
+        let private jsonObject =
+            fun stream -> parseObject stream |> Object
 
-        let parse text =
-            match run pjson text with
-            | Success (json, _, _) ->  json
-            | Failure (error, _, _) -> failwith error
+        let private jsonArray =
+            fun stream -> parseArray stream |> Array
+
+        let private jsonString =
+            fun stream -> parseString stream |> String
+
+        let private jsonNumber =
+            fun stream -> parseNumber stream |> Number
+
+        let private parseJson (stream: JsonStream) =
+            match stream.Peek() with
+            | '{' -> jsonObject stream
+            | '[' -> jsonArray stream
+            | '"' -> jsonString stream
+            | 't' when stream.Skip("true") -> Bool true
+            | 'f' when stream.Skip("false") -> Bool false
+            | 'n' when stream.Skip("null") -> Null ()
+            | _ -> jsonNumber stream
+
+        do pjson <- parseJson
+
+        /// <summary>
+        /// Attempts to parse the contents of a JSON string.
+        /// </summary>
+        /// <param name="json">The JSON string to parse.</param>
+        /// <returns>The parsed JSON presented as a <see cref="Json"/> AST object.</returns>
+        /// <exception cref="UnexpectedJsonException">
+        /// The <paramref name="json"/> string is malformed and contains a sequence of characters that 
+        /// do not adhere to the expected parsing rules, as defined by the RFC7159 specification.
+        /// </exception>
+        let parse json =
+            use stream = new JsonStream(new StringReader(json))      
+            pjson stream
