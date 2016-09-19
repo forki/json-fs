@@ -5,8 +5,8 @@ environment:
     secure: CsYa7MTujGNBt/YiDych8D61r5vneMCuA5q7umBEaeoRR+ld43XEcNQOBqAi2U9t
   SIGNING_KEY_PASSPHRASE:
     secure: rTlq+yIYmKB33X7v/s4YXTFQ6y6NOxTQqqFH6x34UK0=
-  NUGET_TOKEN:
-    secure: CbuhZ1G9f3uqtUI3YGltnT7LvC+0590MyF+4vue/JEqU5k2pSx8Lksvz1vZvkIQ8
+  NUGETKEY:
+    secure: SgmeRt/dKDcnztsniZLII9OBEgZ9xQ/EaqxEABEe5KP0V0weBJxFOAqQ3qpjRnFy
 assembly_info:
   patch: false
 build_script:
