@@ -11,3 +11,7 @@ Raw parsing of JSON text using FParsec parsers
 #### 0.1.0-beta1
 
 * Improve the performance of the library by removing the dependency on FParsec and reading from a custom forward only JSON stream [#20](https://github.com/ptcoda/json-fs/issues/20)
+
+#### 0.1.0-beta2
+
+* Support multiple types of json formatting [#23](https://github.com/ptcoda/json-fs/issues/23)
