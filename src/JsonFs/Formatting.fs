@@ -12,12 +12,39 @@ module Formatting =
             {
                 Spacing = id
             }
+        static member SingleLine =
+            {
+                Spacing = id
+            }
+        static member Indented =
+            {
+                Spacing = id
+            }
 
     let rec private formatJson options = 
         function
-        | Null _ ->  "null"
+        | Object value -> formatObject value
+        | Array value -> formatArray value
+        | String value -> formatString value
+        | Number value -> formatNumber value
         | Bool value -> formatBool value
-        | _ -> ""
+        | Null _ ->  "null"
+
+    and private formatObject =
+        function
+        | value -> "" // TODO: need to loop over each element and call formatJson
+
+    and private formatArray =
+        function
+        | value -> "" // TODO: need to loop over each element and call formatJson
+
+    and private formatString =
+        function
+        | value -> sprintf "\"%s\"" value
+
+    and private formatNumber =
+        function
+        | value -> sprintf "%E" value
 
     and private formatBool =
         function
