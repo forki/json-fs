@@ -4,6 +4,15 @@
 module Formatting =
     open System.Text
 
+    type private Formatter<'a> =
+        'a -> StringBuilder -> StringBuilder
+
+    let private append (text: string) (builder: StringBuilder) =
+        builder.Append text
+
+    let private appendf (text: string) (format: obj) (builder: StringBuilder) =
+        builder.AppendFormat(text, format)
+
     type FormattingOptions =
         {
             Spacing: StringBuilder -> StringBuilder
@@ -21,41 +30,52 @@ module Formatting =
                 Spacing = id
             }
 
-    let rec private formatJson options = 
+    let rec private formatJson = 
         function
         | Object value -> formatObject value
         | Array value -> formatArray value
         | String value -> formatString value
         | Number value -> formatNumber value
         | Bool value -> formatBool value
-        | Null _ ->  "null"
+        | Null _ -> append "null"
 
     and private formatObject =
         function
-        | value -> "" // TODO: need to loop over each element and call formatJson
+        | value -> appendf "{{{0}}}" ""
 
     and private formatArray =
         function
-        | value -> "" // TODO: need to loop over each element and call formatJson
+        | value -> appendf "[{0}]" ""
 
     and private formatString =
         function
-        | value -> sprintf "\"%s\"" value
+        | value -> appendf "\"{0}\"" value
 
     and private formatNumber =
         function
-        | value -> sprintf "%E" value
+        // TODO: need to support formatting of different numeric types
+        | value -> append (string value)
 
     and private formatBool =
         function
-        | true -> "true"
-        | _ -> "false"
+        | true -> append "true"
+        | _ -> append "false"
+
+//    and private join list =
+//        let rec join collected =
+//            function
+//            | [] -> ""
+//            | x::xs -> join (formatJson x::xs) collected
+//
+//        join [] list
 
     [<RequireQualifiedAccess>]
     module Json =
     
-        let formatWith =
-            fun options json -> formatJson options json
+        let formatWith options json =
+            StringBuilder()
+            |> formatJson json
+            |> string
 
         let format =
             fun json -> formatWith FormattingOptions.Compact json
