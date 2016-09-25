@@ -34,6 +34,9 @@ let isRelease =
     else
         getBranchName __SOURCE_DIRECTORY__ = "master"
 
+if isPullRequest then trace "We are about to build a pull request"
+if isRelease then trace "We are about to build a release"
+
 // Extract information from the pending release
 let releaseNotes = parseReleaseNotes (File.ReadAllLines "RELEASE_NOTES.md")
 

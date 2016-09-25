@@ -7,28 +7,23 @@ module Formatting =
     type private Formatter<'a> =
         'a -> StringBuilder -> StringBuilder
 
+    type private Separator =
+        StringBuilder -> StringBuilder
+
     let private append (text: string) (builder: StringBuilder) =
         builder.Append text
 
-    let private appendf (text: string) (format: obj) (builder: StringBuilder) =
+    let private appendFormat (text: string) (format: obj) (builder: StringBuilder) =
         builder.AppendFormat(text, format)
 
-    type FormattingOptions =
-        {
-            Spacing: StringBuilder -> StringBuilder
-        }
-        static member Compact =
-            {
-                Spacing = id
-            }
-        static member SingleLine =
-            {
-                Spacing = id
-            }
-        static member Indented =
-            {
-                Spacing = id
-            }
+    let private appendJoin<'a> (formatter: Formatter<'a>) (separator: Separator) =
+        let rec join values (builder: StringBuilder) =
+            match values with
+            | [] -> builder
+            | [i] -> formatter i builder
+            | head::tail -> (formatter head >> separator >> join tail) builder
+        
+        join
 
     let rec private formatJson = 
         function
@@ -41,19 +36,24 @@ module Formatting =
 
     and private formatObject =
         function
-        | value -> appendf "{{{0}}}" ""
+        | value -> append "{" 
+                   >> appendJoin (fun (k, v) -> appendFormat "\"{0}\":" k >> formatJson v) 
+                        (append ",") 
+                        (Map.toList value)
+                   >> append "}"
 
     and private formatArray =
         function
-        | value -> appendf "[{0}]" ""
+        | value -> append "[" 
+                   >> appendJoin formatJson (append ",") value
+                   >> append "]"
 
     and private formatString =
         function
-        | value -> appendf "\"{0}\"" value
+        | value -> appendFormat "\"{0}\"" value
 
     and private formatNumber =
         function
-        // TODO: need to support formatting of different numeric types
         | value -> append (string value)
 
     and private formatBool =
@@ -61,21 +61,10 @@ module Formatting =
         | true -> append "true"
         | _ -> append "false"
 
-//    and private join list =
-//        let rec join collected =
-//            function
-//            | [] -> ""
-//            | x::xs -> join (formatJson x::xs) collected
-//
-//        join [] list
-
     [<RequireQualifiedAccess>]
     module Json =
     
-        let formatWith options json =
+        let format json =
             StringBuilder()
             |> formatJson json
             |> string
-
-        let format =
-            fun json -> formatWith FormattingOptions.Compact json

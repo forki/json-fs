@@ -24,9 +24,9 @@ let ``the literal false is formatted correctly``() =
 
 [<Fact>]
 let ``a number is formatted correctly``() =
-    let result = Json.format (Number -1.2345e+02M)
+    let result = Json.format (Number 123M)
 
-    result |> should equal "-1.2345e+02"
+    result |> should equal "123"
 
 [<Fact>]
 let ``a string is formatted correctly``() =
@@ -46,35 +46,3 @@ let ``an object is formatted correctly``() =
     let result = Json.format (Object expected)
 
     result |> should equal "{\"name\":\"john doe\"}"
-
-[<Fact>]
-let ``an object is formatted across multiple lines with indentations of 4 spaces in length``() =    
-    let nested =
-        [("first", String "john"); ("last", String "doe")] |> Map.ofList
-
-    let expected = 
-        [("name", Object nested); 
-         ("range", Array [Number 1M; Number 2M; Number 3M])] |> Map.ofList
-    ()
-
-//    let result = Json.formatWith FormattingOptions.Indented (Object expected)
-//    result |> should equal @"{
-//        ""name"": {
-//            ""first"": ""john"",
-//            ""last"": ""doe""
-//        },
-//        ""range"": [
-//            1,
-//            2,
-//            3
-//        ]
-//    }"
-
-[<Fact>]
-let ``an object is formatted onto a single line with the correct spacing``() =
-    let expected = 
-        [("firstName", String "john"); ("lastName", String "doe")] |> Map.ofList
-
-    ()
-//    let result = Json.formatWith FormattingOptions.SingleLine (Object expected)
-//    result |> should equal "{ \"firstName\": \"john\", \"lastName\": \"doe\" }"
