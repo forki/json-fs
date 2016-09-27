@@ -3,8 +3,8 @@
 GROUP Build
 NUGET
   remote: https://www.nuget.org/api/v2
-    Brutal.Dev.StrongNameSigner (1.8)
-    FAKE (4.39.1)
+    Brutal.Dev.StrongNameSigner (2.1)
+    FAKE (4.40)
     OpenCover (4.6.519)
     secure-file (1.0.31)
     xunit.runner.console (2.1)
@@ -13,7 +13,7 @@ GROUP PerformanceTest
 NUGET
   remote: https://www.nuget.org/api/v2
     Aether (8.1.2)
-    Chiron (6.2)
+    Chiron (6.2.1)
       Aether (>= 8.0.2 < 9.0)
       FParsec (>= 1.0 < 2.0)
     FParsec (1.0.2)
