@@ -2,6 +2,7 @@
 
 [<AutoOpen>]
 module Formatting =
+    open System
     open System.Text
 
     type private Formatter<'a> =
@@ -25,27 +26,47 @@ module Formatting =
         
         join
 
-    let rec private formatJson = 
+    type FormattingOptions =
+        {
+            Spacing: StringBuilder -> StringBuilder
+            NewLine: int -> StringBuilder -> StringBuilder
+        }
+        static member Compact =
+            {
+                Spacing = id
+                NewLine = fun _ -> id
+            }
+        static member Indented =
+            {
+                Spacing = append " "
+                NewLine = fun i -> append Environment.NewLine >> append (String.replicate i "  ")
+            }
+
+    let rec private formatJson level (options: FormattingOptions) = 
         function
-        | Object value -> formatObject value
-        | Array value -> formatArray value
+        | Object value -> formatObject level options value
+        | Array value -> formatArray level options value
         | String value -> formatString value
         | Number value -> formatNumber value
         | Bool value -> formatBool value
         | Null _ -> append "null"
 
-    and private formatObject =
+    and private formatObject level options =
         function
         | value -> append "{" 
-                   >> appendJoin (fun (k, v) -> appendFormat "\"{0}\":" k >> formatJson v) 
-                        (append ",") 
+                   >> options.NewLine (level+1)
+                   >> appendJoin (fun (k, v) -> appendFormat "\"{0}\":" k >> options.Spacing >> (formatJson (level+1) options v)) 
+                        (append "," >> options.NewLine (level+1))
                         (Map.toList value)
+                   >> options.NewLine level
                    >> append "}"
 
-    and private formatArray =
+    and private formatArray level options =
         function
-        | value -> append "[" 
-                   >> appendJoin formatJson (append ",") value
+        | value -> append "["
+                   >> options.NewLine (level+1)
+                   >> appendJoin (formatJson (level+1) options) (append "," >> options.NewLine (level+1)) value
+                   >> options.NewLine level
                    >> append "]"
 
     and private formatString =
@@ -63,8 +84,11 @@ module Formatting =
 
     [<RequireQualifiedAccess>]
     module Json =
+
+        let formatWith options json =
+            StringBuilder()
+            |> formatJson 0 options json
+            |> string
     
         let format json =
-            StringBuilder()
-            |> formatJson json
-            |> string
+            formatWith FormattingOptions.Compact json
