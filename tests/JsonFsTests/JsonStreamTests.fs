@@ -7,7 +7,7 @@ open JsonStreamFactory
 
 [<Fact>]
 let ``reading from an exhausted buffer will always return a null terminator``() =
-    use stream = jsonStreamWithBufferSize "" 0
+    use stream = jsonStreamWithBufferSize "" 1
     
     stream.Read() |> should equal '\u0000'
 
@@ -173,3 +173,26 @@ let ``when reading characters across a stream boundary, a padded array is return
 let ``an UnexpectedJsonException is thrown if an expected character doesn't match``() =
     use stream = jsonStream "a"
     (fun() -> stream.Expect 'b') |> should throw typeof<UnexpectedJsonException>
+
+[<Fact>]
+let ``whitespace is skipped across a stream boundary until the first non-whitespace character``() =
+    use stream = jsonStreamWithBufferSize "  \r\n\t  \ne" 4
+
+    stream.SkipWhitespace()
+    stream.Peek() |> should equal 'e'
+
+[<Fact>]
+let ``skipping whitespace on a non-whitespace character does nothing to the stream``() =
+    use stream = jsonStream "a"
+
+    stream.Peek() |> should equal 'a'
+    stream.SkipWhitespace()
+    stream.Peek() |> should equal 'a'
+
+[<Fact>]
+let ``skipping whitespace while the stream is empty, does nothing``() =
+    use stream = jsonStream ""
+
+    stream.Peek() |> should equal '\u0000'
+    stream.SkipWhitespace()
+    stream.Peek() |> should equal '\u0000'

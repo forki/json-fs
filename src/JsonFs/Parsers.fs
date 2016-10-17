@@ -33,22 +33,14 @@ module Parsers =
 
     let mutable private pjson = createForwardDeclaredParser()
     
-    (* By declaring these parsers once, memory allocations will be reduced as internal buffers reused *)
-    let private jsonNumber = new JsonNumber()
-    let private jsonString = new JsonString()
-
     let private parseNumber (stream: JsonStream) =
         try
-            decimal (jsonNumber.Read stream)
+            decimal (stream.ReadNumber())
         with
         | _ -> raise (UnexpectedJsonException());
 
     let private parseString (stream: JsonStream) =        
-        stream.Expect quotationMark
-        let value = jsonString.Read stream
-        stream.Expect quotationMark
-
-        value
+        stream.ReadString()
 
     let private emptyBetween (startChar: char) (endChar: char) (stream: JsonStream) =
         let mutable empty = false
@@ -68,11 +60,7 @@ module Parsers =
         fun stream -> emptyBetween beginObject endObject stream
         
     let private parseArrayElement (stream: JsonStream) =
-        stream.SkipWhitespace()
-        let arrayElement = pjson stream
-        stream.SkipWhitespace()
-
-        arrayElement
+        pjson stream
 
     let private firstArrayElement =
         fun stream -> [parseArrayElement stream]
@@ -81,14 +69,9 @@ module Parsers =
         fun stream array -> (parseArrayElement stream)::array
 
     let private parseObjectElement (stream: JsonStream) =
-        stream.SkipWhitespace()
-        let property = parseString stream
-            
-        stream.SkipWhitespace()
-        stream.Expect nameSeparator
-        stream.SkipWhitespace()
-
+        let property = stream.ReadProperty()
         let value = pjson stream
+        // TODO: remove this call here (possibly hide this method call in the JsonStream class)
         stream.SkipWhitespace()
 
         (property, value)
@@ -106,9 +89,13 @@ module Parsers =
             jsonArray <- firstArrayElement stream
 
             while stream.Skip valueSeparator do
+                // TODO: seem like wasted calls here to skip whitespace (moved into stream?)
+                stream.SkipWhitespace()
                 jsonArray <- appendArrayElement stream jsonArray
+                stream.SkipWhitespace()
 
             stream.Expect endArray
+            stream.SkipWhitespace()
 
         List.rev jsonArray
 
@@ -119,9 +106,13 @@ module Parsers =
             jsonObject <- firstObjectElement stream
 
             while stream.Skip valueSeparator do
+                // TODO: seem like wasted calls here to skip whitespace (moved into stream?)
+                stream.SkipWhitespace()
                 jsonObject <- appendObjectElement stream jsonObject
+                stream.SkipWhitespace()
 
             stream.Expect endObject
+            stream.SkipWhitespace()
             
         Map.ofList (List.rev jsonObject)
 

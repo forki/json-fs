@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace JsonCs
 {
@@ -20,6 +22,16 @@ namespace JsonCs
         /// </remarks>
         public JsonStream(TextReader textReader, int bufferSize = DefaultBufferSize)
         {
+            if (textReader == null)
+            {
+                throw new ArgumentNullException(nameof(textReader));
+            }
+
+            if (bufferSize < 0)
+            {
+                throw new ArgumentException("", nameof(bufferSize));
+            }
+
             _textReader = textReader;
             _bufferSize = bufferSize;
             _buffer = new char[_bufferSize];
@@ -29,8 +41,11 @@ namespace JsonCs
 
         private void FillBufferAndResetReadPosition()
         {
-            var charactersRead = _textReader.Read(_buffer, 0, _bufferSize);
-            NullTerminateBufferIfNotAtCapacity(charactersRead);
+            _charactersInBuffer = _textReader.Read(_buffer, 0, _bufferSize);
+            if (_charactersInBuffer < _bufferSize)
+            {
+                _buffer[_charactersInBuffer] = NullTerminator;
+            }
 
             _readPosition = 0;
         }
@@ -64,17 +79,23 @@ namespace JsonCs
         /// </remarks>
         public bool Skip(char character)
         {
-            if (EndOfBufferReached())
+            if (BufferTerminated)
             {
-                ExpandBufferAndPreserveContent(1);
+                return false;
             }
 
-            if (_buffer[_readPosition] != character)
+            if (character != Peek())
             {
                 return false;
             }
 
             _readPosition++;
+
+            if (BufferEmpty)
+            {
+                FillBufferAndResetReadPosition();
+            }
+
             return true;
         }
 
@@ -96,8 +117,13 @@ namespace JsonCs
             {
                 return true;
             }
-            
-            if (!CanReadFromBuffer(characters.Length))
+
+            if (BufferTerminated)
+            {
+                return false;
+            }
+
+            if (AvailableReads < characters.Length)
             {
                 ExpandBufferAndPreserveContent(characters.Length);
             }
@@ -106,6 +132,11 @@ namespace JsonCs
 
             if (characters.All(c => c == ReadOne()))
             {
+                if (BufferEmpty)
+                {
+                    FillBufferAndResetReadPosition();
+                }
+
                 return true;
             }
 
@@ -136,18 +167,35 @@ namespace JsonCs
         /// </remarks>
         public void SkipWhitespace()
         {
-            while (char.IsWhiteSpace(_buffer[_readPosition]))
+            if (AtNullTerminator())
             {
+                return;
+            }
+
+            do
+            {
+                if (!char.IsWhiteSpace(Peek()))
+                {
+                    break;
+                }
+
                 _readPosition++;
 
-                if (EndOfBufferReached())
+                if (BufferEmpty)
                 {
                     FillBufferAndResetReadPosition();
                 }
-            }
+
+            } while (BufferCanSeek);
         }
 
-        private bool EndOfBufferReached() => _readPosition == _bufferSize;
+        private int AvailableReads => _charactersInBuffer - _readPosition;
+
+        private bool BufferCanSeek => AvailableReads > 0;
+
+        private bool BufferEmpty => AvailableReads == 0;
+
+        private bool BufferTerminated => _buffer[_readPosition] == NullTerminator;
 
         /// <summary>
         /// Reads the next character from the character stream.
@@ -155,34 +203,28 @@ namespace JsonCs
         /// <returns>
         /// The next character or <see cref="NullTerminator"/> if at the end of the stream.
         /// </returns>
-        public char Read() => CheckAndReadCharacterFromBuffer();
-
-        private bool CanReadFromBuffer(int characters) => (_readPosition + characters) < _bufferSize;
-
-        private char CheckAndReadCharacterFromBuffer()
+        public char Read()
         {
-            if (IsBufferEmpty())
+            if (BufferTerminated)
             {
                 return NullTerminator;
             }
 
-            var readCharacter = ReadOne();
+            var character = ReadOne();
 
-            if (EndOfBufferReached())
+            if (BufferEmpty)
             {
                 FillBufferAndResetReadPosition();
             }
 
-            return readCharacter;
+            return character;
         }
 
         private char ReadOne() => _buffer[_readPosition++];
 
-        private bool AtNullTerminator() => AtNullTerminator(_buffer[_readPosition]);
+        private bool AtNullTerminator() => _buffer[_readPosition] == NullTerminator;
 
         private static bool AtNullTerminator(char character) => character == NullTerminator;
-
-        private bool IsBufferEmpty() => _readPosition >= _bufferSize || AtNullTerminator();
 
         /// <summary>
         /// Reads a number of characters from the character stream.
@@ -196,12 +238,25 @@ namespace JsonCs
         /// </remarks>
         public char[] Read(int expectedCharacters)
         {
-            return CanReadFromBuffer(expectedCharacters) ? UncheckedRead(expectedCharacters) : CheckedRead(expectedCharacters);
+            char[] readCharacters;
+
+            if (AvailableReads >= expectedCharacters)
+            {
+                readCharacters = Array.Create(expectedCharacters, ReadOne);
+            }
+            else
+            {
+                ExpandBufferAndPreserveContent(expectedCharacters);
+                readCharacters = Array.Create(expectedCharacters, ReadOne, AtNullTerminator);
+            }
+
+            if (BufferEmpty)
+            {
+                FillBufferAndResetReadPosition();
+            }
+
+            return readCharacters;
         }
-
-        private char[] UncheckedRead(int toRead) => Array.Create(toRead, ReadOne);
-
-        private char[] CheckedRead(int toRead) => Array.Create(toRead, Read, AtNullTerminator);
 
         /// <summary>
         /// Check that the next character within the stream is as expected.
@@ -217,6 +272,191 @@ namespace JsonCs
             {
                 throw new UnexpectedJsonException();
             }
+        }
+
+        /// <summary>
+        /// Attempts to read a property from the stream.
+        /// </summary>
+        /// <example>
+        /// The property will be expected to be in the following format, as defined
+        /// by the RFC [ADD LINK] specification.
+        /// [ADD EXAMPLE]
+        /// </example>
+        /// <returns>The read property</returns>
+        /// <exception cref="UnexpectedJsonException">
+        /// [The stream was not in the expected format]
+        /// </exception>
+        public string ReadProperty()
+        {
+            if (BufferTerminated)
+            {
+                return "\0";
+            }
+
+            var property = ReadString();
+            Expect(':');
+            SkipWhitespace();
+
+            return property;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public string ReadNumber()
+        {
+            SkipWhitespace();
+
+            var readNumber = new StringBuilder();
+            var canRead = true;
+            do
+            {
+                var availableReads = AvailableReads;
+                for (; availableReads > 0; availableReads--)
+                {
+                    if (IsNumber(Peek()))
+                    {
+                        readNumber.Append(_buffer[_readPosition++]);
+                        continue;
+                    }
+                    
+                    canRead = false;
+                    break;
+                }
+
+                if (BufferEmpty)
+                {
+                    FillBufferAndResetReadPosition();
+                }
+
+            } while (canRead && AvailableReads > 0);
+
+            SkipWhitespace();
+            return readNumber.ToString();
+        }
+
+        private static bool IsNumber(char character)
+        {
+            switch (character)
+            {
+                case '-':
+                case '.':
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case 'e':
+                case 'E':
+                case '+':
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public string ReadString()
+        {
+            if (BufferTerminated)
+            {
+                return "\0";
+            }
+
+            SkipWhitespace();
+            Expect('"');
+
+            var stringBuffer = new StringBuilder();
+            var canRead = true;
+            do
+            {
+                // TODO: This now seems to be a common approach to reading from the buffer
+                // TODO: when jumping forward _readPosition++, the available reads count is out of sync (index out of bounds exception)
+                var availableReads = AvailableReads;
+                for (; availableReads > 0; availableReads--)
+                {
+                    // TODO: This logic is the only difference between other methods (could be captured in an Action)
+                    var character = _buffer[_readPosition++];
+                    if (character == '\\')
+                    {
+                        stringBuffer.Append(ReadEscapeCharacter());
+                        availableReads--;
+                    }
+                    else if (character == '"' || character == '\0')
+                    {
+                        canRead = false;
+                        break;
+                    }
+                    else
+                    {
+                        stringBuffer.Append(character);
+                    }
+                }
+
+                if (BufferEmpty)
+                {
+                    FillBufferAndResetReadPosition();
+                }
+
+            } while (canRead && AvailableReads > 0);
+
+            SkipWhitespace();
+            return stringBuffer.ToString();
+        }
+
+        private char ReadEscapeCharacter()
+        {
+            switch (_buffer[_readPosition++])
+            {
+                case '"':
+                    return '\u0022';
+                case '\\':
+                    return '\u005c';
+                case '/':
+                    return '\u002f';
+                case 'b':
+                    return '\u0008';
+                case 'f':
+                    return '\u000c';
+                case 'n':
+                    return '\u000a';
+                case 'r':
+                    return '\u000d';
+                case 't':
+                    return '\u0009';
+                case 'u':
+                    return ParseUnicode();
+                default:
+                    throw new UnexpectedJsonException();
+            }
+        }
+
+        private char ParseUnicode()
+        {
+            char unicodeCharacter;
+
+            try
+            {
+                // TODO: Determine if 4 characters are available without the need to expand the buffer?
+
+                unicodeCharacter = Convert.ToChar(int.Parse(new string(Read(4)), NumberStyles.HexNumber));
+            }
+            catch
+            {
+                throw new UnexpectedJsonException();
+            }
+
+            return unicodeCharacter;
         }
 
         /// <summary>
@@ -239,6 +479,7 @@ namespace JsonCs
         private readonly TextReader _textReader;
         private char[] _buffer;
         private int _bufferSize;
+        private int _charactersInBuffer;
         private int _readPosition;
 
         private const int DefaultBufferSize = 1024;

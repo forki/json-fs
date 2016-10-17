@@ -87,11 +87,10 @@
     <Compile Include="ObjectTests.fs" />
     <Compile Include="JsonStreamFactory.fs" />
     <Compile Include="JsonStreamTests.fs" />
-    <Compile Include="JsonNumberTests.fs" />
-    <Compile Include="JsonStringTests.fs" />
     <Compile Include="FormattingTests.fs" />
     <Content Include="App.config" />
     <None Include="paket.references" />
+    <Compile Include="AJsonProperty.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

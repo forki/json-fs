@@ -3,11 +3,11 @@
 let parseFileAndCollectStatistics file iterations =
     printfn " * %s" file
 
-    let chironStatistic = Chiron.parseJson file iterations
-    let newtonsoftStatistic = Newtonsoft.parseJson file iterations
+    //let chironStatistic = Chiron.parseJson file iterations
+    //let newtonsoftStatistic = Newtonsoft.parseJson file iterations
     let jsonFsStatistic = JsonFs.parseJson file iterations
     
-    [chironStatistic; newtonsoftStatistic; jsonFsStatistic]
+    [jsonFsStatistic]
 
 let collectParsingStatistics files =
     printfn "Parsing input files:"
@@ -34,5 +34,7 @@ let printStatistics statistics =
 
 [<EntryPoint>]
 let main argv = 
-    [1..3] |> List.iter (fun i -> collectParsingStatistics ["small.json"; "medium.json"; "large.json"] |> printStatistics)
+    [1..3] |> List.iter (fun i -> collectParsingStatistics ["small.json"; "medium.json"] |> printStatistics)
     0
+
+// TODO: write unit test to ensure an array of objects is read correctly (medium.json)
